@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".champDetails.IntroChampFragment">
+
+    <data>
+        <variable
+            name="viewModel"
+            type="com.example.leagueapp1.champDetails.IntroChampViewModel" />
+    </data>
+
+
+    <androidx.constraintlayout.motion.widget.MotionLayout
+        android:id="@+id/constraintLayout2"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/primaryDarkColor"
+        app:layoutDescription="@xml/intro_champ_layout_xml_constraintlayout2_scene">
+
+
+        <com.mikhaellopez.circularprogressbar.CircularProgressBar
+            android:id="@+id/loadingProgressCircle"
+            android:layout_width="@dimen/lp_progress_bar_size"
+            android:layout_height="@dimen/lp_progress_bar_size"
+            app:cpb_background_progressbar_color="#b6bbd8"
+            app:cpb_background_progressbar_width="25dp"
+            app:cpb_indeterminate_mode="true"
+            app:cpb_progress_direction="to_right"
+            app:cpb_progress_max="100"
+            app:cpb_progressbar_color_end="@color/primaryColor"
+            app:cpb_progressbar_color_start="#D30808"
+            app:cpb_progressbar_width="13dp"
+            app:cpb_round_border="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.497"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:cpb_progress="70" />
+
+        <TextView
+            android:id="@+id/loadingText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Calculating Initial Ranking"
+            android:textColor="@android:color/white"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toTopOf="@+id/loadingProgressCircle"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="wrap_content"
+            android:layout_height="200dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/emblem_iron"
+            />
+
+        <TextView
+            android:id="@+id/lpLoadingNum"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{@string/lp_text_format(viewModel.lpText)}"
+            android:textColor="@android:color/white"
+            android:textSize="25sp"
+            android:textStyle="bold"
+            tools:text="50 LP"
+            app:layout_constraintBottom_toBottomOf="@+id/loadingProgressCircle"
+            app:layout_constraintEnd_toEndOf="@+id/loadingProgressCircle"
+            app:layout_constraintTop_toTopOf="@+id/loadingProgressCircle" />
+
+    </androidx.constraintlayout.motion.widget.MotionLayout>
+</layout>

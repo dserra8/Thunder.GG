@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.example.leagueapp1.home.HomeFragment"
+        android:label="Thunder.GG"
+        tools:layout="@layout/home" >
+        <action
+            android:id="@+id/action_homeFragment_to_listChampFragment"
+            app:destination="@id/listChampFragment"
+            app:enterAnim="@anim/from_right"
+            app:exitAnim="@anim/to_left"
+            app:popEnterAnim="@anim/from_left"
+            app:popExitAnim="@anim/to_right" />
+    </fragment>
+    <fragment
+        android:id="@+id/listChampFragment"
+        android:name="com.example.leagueapp1.listChamp.ListChampFragment"
+        android:label="list_champs"
+        tools:layout="@layout/list_champs" >
+        <action
+            android:id="@+id/action_listChampFragment_to_champScreenFragment"
+            app:destination="@id/champScreenFragment"
+            app:enterAnim="@anim/from_right"
+            app:exitAnim="@anim/to_left"
+            app:popEnterAnim="@anim/from_left"
+            app:popExitAnim="@anim/to_right" />
+        <action
+            android:id="@+id/action_listChampFragment_to_homeFragment"
+            app:destination="@id/homeFragment" />
+        <action
+            android:id="@+id/action_listChampFragment_to_introChampFragment"
+            app:destination="@id/introChampFragment"
+            app:enterAnim="@anim/from_right"
+            app:exitAnim="@anim/to_left"
+            app:popEnterAnim="@anim/from_left"
+            app:popExitAnim="@anim/to_right" />
+    </fragment>
+    <fragment
+        android:id="@+id/champScreenFragment"
+        android:name="com.example.leagueapp1.champDetails.ChampScreenFragment"
+        android:label="champ_screen"
+        tools:layout="@layout/champ_screen" >
+        <argument
+            android:name="championPicked"
+            app:argType="com.example.leagueapp1.champListRecyclerView.ChampItem" />
+        <action
+            android:id="@+id/action_champScreenFragment_to_listChampFragment"
+            app:destination="@id/listChampFragment" />
+    </fragment>
+    <dialog
+        android:id="@+id/deleteSummonerDialogFragment"
+        android:name="com.example.leagueapp1.settings.DeleteSummonerDialogFragment"
+        android:label="DeleteSummonerDialogFragment" /><action android:id="@+id/action_global_deleteSummonerDialogFragment" app:destination="@id/deleteSummonerDialogFragment"/>
+    <fragment
+        android:id="@+id/introChampFragment"
+        android:name="com.example.leagueapp1.champDetails.IntroChampFragment"
+        android:label="intro_champ_layout"
+        tools:layout="@layout/intro_champ_layout" >
+        <argument
+            android:name="introChampionPicked"
+            app:argType="com.example.leagueapp1.champListRecyclerView.ChampItem" />
+        <action
+            android:id="@+id/action_introChampFragment_to_champScreenFragment"
+            app:destination="@id/champScreenFragment"
+            app:enterAnim="@anim/fade_in"
+            app:exitAnim="@anim/fade_out"
+            app:popUpTo="@id/listChampFragment" />
+    </fragment>
+
+</navigation>

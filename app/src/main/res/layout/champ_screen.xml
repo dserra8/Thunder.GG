@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    >
+
+    <data>
+        <variable
+            name="viewModel"
+            type="com.example.leagueapp1.champDetails.ChampScreenViewModel" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#01051C"
+        tools:context="com.example.leagueapp1.champDetails">
+
+        <ImageView
+            android:id="@+id/champImg"
+            android:layout_width="match_parent"
+            android:layout_height="210dp"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:layout_editor_absoluteX="115dp"
+            tools:src="@drawable/akali_splash" />
+
+        <ImageView
+            android:id="@+id/rankImg"
+            android:layout_width="@dimen/rank_size"
+            android:layout_height="@dimen/rank_size"
+            android:layout_marginTop="32dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/champImg"
+            tools:src="@drawable/bronze" />
+
+        <com.mikhaellopez.circularprogressbar.CircularProgressBar
+            android:id="@+id/circularProgressIndicator"
+            android:layout_width="@dimen/lp_progress_bar_size"
+            android:layout_height="@dimen/lp_progress_bar_size"
+            app:cpb_background_progressbar_color="#b6bbd8"
+            app:cpb_background_progressbar_width="5dp"
+            app:cpb_progress_direction="to_right"
+            app:cpb_progress_max="100"
+            app:cpb_progressbar_color_end="@color/primaryColor"
+            app:cpb_progressbar_color_start="#D30808"
+            app:cpb_progressbar_width="13dp"
+            app:cpb_round_border="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.497"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/rankImg"
+            tools:cpb_progress="50" />
+
+        <TextView
+            android:id="@+id/lpNum"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{@string/lp_text_format(viewModel.lpText)}"
+            android:textColor="@android:color/white"
+            android:textSize="25sp"
+            android:textStyle="bold"
+            tools:text="50 LP"
+            app:layout_constraintBottom_toBottomOf="@+id/circularProgressIndicator"
+            app:layout_constraintEnd_toEndOf="@+id/circularProgressIndicator"
+            app:layout_constraintHorizontal_bias="0.496"
+            app:layout_constraintStart_toStartOf="@+id/circularProgressIndicator"
+            app:layout_constraintTop_toTopOf="@+id/circularProgressIndicator" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

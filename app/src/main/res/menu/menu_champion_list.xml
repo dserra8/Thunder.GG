@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_search"
+        android:icon="@drawable/ic_search"
+        android:title="Search"
+        app:actionViewClass="androidx.appcompat.widget.SearchView"
+        app:showAsAction="always|collapseActionView" />
+
+    <item
+        android:title="Sort"
+        app:showAsAction="always"
+        >
+
+        <menu>
+            <item
+                android:id="@+id/action_sort_Name"
+                android:title="By Name"
+                android:icon="@drawable/ic_pin"
+
+                />
+            <item
+                android:id="@+id/action_sort_mastery_points"
+                android:title="By Mastery Points"
+                android:icon="@drawable/ic_pin"
+                />
+        </menu>
+    </item>
+
+    <item
+        android:title="SHOW"
+        app:showAsAction="always">
+
+        <menu>
+            <group
+                android:id="@+id/roleGroup"
+                android:checkableBehavior="single">
+                <item
+                    android:id="@+id/action_show_all"
+                    android:checked="true"
+                    android:title="ALL"
+                    app:showAsAction="never" />
+                <item
+                    android:id="@+id/action_show_adc"
+                    android:title="AD Carries"
+                    app:showAsAction="never" />
+                <item
+                    android:id="@+id/action_show_mid"
+                    android:title="Mid Laners"
+                    app:showAsAction="never" />
+                <item
+                    android:id="@+id/action_show_Support"
+                    android:title="Supports"
+                    app:showAsAction="never" />
+                <item
+                    android:id="@+id/action_show_jungle"
+                    android:title="Junglers"
+                    app:showAsAction="never" />
+                <item
+                    android:id="@+id/action_show_top"
+                    android:title="Top Laners"
+                    app:showAsAction="never" />
+            </group>
+        </menu>
+    </item>
+
+
+</menu>
