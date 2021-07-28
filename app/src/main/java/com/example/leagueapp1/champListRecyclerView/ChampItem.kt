@@ -5,10 +5,11 @@ import kotlinx.android.parcel.Parcelize
 
 @Parcelize
 data class ChampItem(
-    val imageResource: Int,
+    val champImageResource: Int,
     val champName: String,
     val id: Int,
-    val masteryPoints: Int
+    val masteryPoints: Int,
+    val rankImageResource: Int,
     ): Parcelable
 
 data class HeaderItem(

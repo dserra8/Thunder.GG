@@ -5,8 +5,8 @@ import androidx.lifecycle.*
 import com.example.leagueapp1.database.SummonerProperties
 import com.example.leagueapp1.network.ErrorResponse
 import com.example.leagueapp1.repository.Repository
-import com.example.leagueapp1.util.Constants.Companion.API_KEY
-import com.example.leagueapp1.util.Constants.Companion.SUMMONER_INFO
+import com.example.leagueapp1.util.Constants.API_KEY
+import com.example.leagueapp1.util.Constants.SUMMONER_INFO
 import com.example.leagueapp1.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope

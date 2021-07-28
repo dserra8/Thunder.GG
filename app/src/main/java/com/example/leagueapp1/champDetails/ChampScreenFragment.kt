@@ -39,28 +39,7 @@ class ChampScreenFragment : Fragment(R.layout.champ_screen) {
         binding.viewModel = viewModel
         binding.lifecycleOwner = this
 
-        binding.rankImg.setImageResource(R.drawable.bronze)
-
         val args by navArgs<ChampScreenFragmentArgs>()
-
-        binding.rankImg.setOnClickListener {
-
-            binding.rankImg.animate().apply {
-                duration = 1000
-                rotationYBy(360f)
-                translationXBy(360f)
-
-            }.withEndAction {
-                binding.rankImg.animate().apply {
-                    translationXBy(-360f)
-                    rotationYBy(-360f)
-                }
-                binding.rankImg.setImageResource(R.drawable.silver)
-            }.withStartAction {
-                binding.rankImg.setImageResource(R.drawable.bronze)
-            }.start()
-        }
-
         val champObj = args.championPicked
         val splashName = formatSplashName(champObj.id)
         val splashArtUrl = "${Constants.SPLASH_ART_URL}${splashName}_0.jpg"
@@ -88,6 +67,7 @@ class ChampScreenFragment : Fragment(R.layout.champ_screen) {
                             is ChampScreenViewModel.ChampScreenEvents.ChampReady -> {
                                 updateRankImage(events.champ)
                                 updateLpText(events.champ.rankInfo?.lp ?: 0)
+                                binding.constraintLayout.transitionToEnd()
                             }
                         }.exhaustive
                     }
@@ -99,15 +79,15 @@ class ChampScreenFragment : Fragment(R.layout.champ_screen) {
     private fun updateRankImage(champ: ChampionMastery) {
         binding.rankImg.setImageResource(
             when (champ.rankInfo?.rank) {
-                Constants.Companion.Ranks.IRON.toString() -> R.drawable.emblem_iron
-                Constants.Companion.Ranks.BRONZE.toString() -> R.drawable.bronze
-                Constants.Companion.Ranks.SILVER.toString() -> R.drawable.silver
-                Constants.Companion.Ranks.GOLD.toString() -> R.drawable.gold
-                Constants.Companion.Ranks.PLATINUM.toString() -> R.drawable.platinum
-                Constants.Companion.Ranks.DIAMOND.toString() -> R.drawable.diamond
-                Constants.Companion.Ranks.MASTER.toString() -> R.drawable.master
-                Constants.Companion.Ranks.GRANDMASTER.toString() -> R.drawable.grandmaster
-                Constants.Companion.Ranks.CHALLENGER.toString() -> R.drawable.challenger
+                Constants.Ranks.IRON.toString() -> R.drawable.emblem_iron
+                Constants.Ranks.BRONZE.toString() -> R.drawable.bronze
+                Constants.Ranks.SILVER.toString() -> R.drawable.silver
+                Constants.Ranks.GOLD.toString() -> R.drawable.gold
+                Constants.Ranks.PLATINUM.toString() -> R.drawable.platinum
+                Constants.Ranks.DIAMOND.toString() -> R.drawable.diamond
+                Constants.Ranks.MASTER.toString() -> R.drawable.master
+                Constants.Ranks.GRANDMASTER.toString() -> R.drawable.grandmaster
+                Constants.Ranks.CHALLENGER.toString() -> R.drawable.challenger
                 else -> R.drawable.ic_error
             }
         )

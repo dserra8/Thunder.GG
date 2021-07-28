@@ -4,4 +4,11 @@
     <string name="summoner_name">Summoner Name</string>
     <string name="submit">Submit</string>
     <string name="lp_text_format">%d LP</string>
+    <string name="drawer_open">Open navigation drawer</string>
+
+    <string name="drawer_close">Close navigation drawer</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="delete_summoner_text">Delete Summoner</string>
+    <string name="no_summoner_text">No Summoner</string>
+    <string name="delete_all_summoners_text">Delete All Summoners</string>
 </resources>

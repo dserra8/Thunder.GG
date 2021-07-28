@@ -27,6 +27,7 @@
             android:onClick="@{() -> viewModel.onSubmit()}"
             android:text="@string/submit"
             android:textSize="14sp"
+            android:textColor="@color/colorOfAllTexts"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"

@@ -39,7 +39,7 @@ class HomeFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binding = HomeBinding.inflate(inflater)
 
 
@@ -48,7 +48,6 @@ class HomeFragment : Fragment() {
         binding.lifecycleOwner = this
 
         mainViewModel.updateActionBarTitle(getString(R.string.app_name), true)
-        mainViewModel.isSummonerActive(false)
 
         viewModel.apply {
 

@@ -10,4 +10,6 @@
   <color name="secondaryTextColor">#ffffff</color>
   <color name="colorOfDropDownMenu">#200303</color>
 
+  <color name="colorOfAllTexts">@android:color/black</color>
+
 </resources>

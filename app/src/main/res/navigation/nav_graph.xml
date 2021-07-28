@@ -53,14 +53,10 @@
             android:id="@+id/action_champScreenFragment_to_listChampFragment"
             app:destination="@id/listChampFragment" />
     </fragment>
-    <dialog
-        android:id="@+id/deleteSummonerDialogFragment"
-        android:name="com.example.leagueapp1.settings.DeleteSummonerDialogFragment"
-        android:label="DeleteSummonerDialogFragment" /><action android:id="@+id/action_global_deleteSummonerDialogFragment" app:destination="@id/deleteSummonerDialogFragment"/>
     <fragment
         android:id="@+id/introChampFragment"
         android:name="com.example.leagueapp1.champDetails.IntroChampFragment"
-        android:label="intro_champ_layout"
+        android:label="Initial Rank"
         tools:layout="@layout/intro_champ_layout" >
         <argument
             android:name="introChampionPicked"
@@ -72,5 +68,10 @@
             app:exitAnim="@anim/fade_out"
             app:popUpTo="@id/listChampFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.example.leagueapp1.settings.SettingsFragment"
+        android:label="Settings"
+        tools:layout="@layout/settings_layout" />
 
 </navigation>

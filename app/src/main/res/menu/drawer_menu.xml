@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/drawerMenu">
 
     <group android:checkableBehavior="single">
         <item android:id="@id/homeFragment"
               android:title="Search Summoner" />
         <item android:id="@id/listChampFragment"
               android:title="Pick Champion"/>
+        <item android:id="@+id/settingsFragment"
+              android:title="Settings"/>
     </group>
 </menu>

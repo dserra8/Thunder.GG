@@ -6,14 +6,14 @@
         android:layout_height="wrap_content"
         android:layout_gravity="start"
         android:layout_marginStart="4dp"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:background="@drawable/home_screen_drawable">
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/nameInBar"
             style="@style/TextAppearance.AppCompat.Widget.ActionBar.Title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-
             android:fontFamily="monospace"
             android:gravity="center"
             android:text="@string/app_name"

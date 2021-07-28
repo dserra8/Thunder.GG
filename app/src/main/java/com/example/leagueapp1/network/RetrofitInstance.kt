@@ -3,8 +3,8 @@ package com.example.leagueapp1.network
 import android.app.Application
 import androidx.room.Room
 import com.example.leagueapp1.database.LeagueDatabase
-import com.example.leagueapp1.util.Constants.Companion.API_KEY
-import com.example.leagueapp1.util.Constants.Companion.URL
+import com.example.leagueapp1.util.Constants.API_KEY
+import com.example.leagueapp1.util.Constants.URL
 import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterFactory
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory

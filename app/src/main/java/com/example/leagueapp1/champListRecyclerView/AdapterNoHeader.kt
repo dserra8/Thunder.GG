@@ -34,10 +34,10 @@ class ChampionListAdapterNoHeader(private val onItemClicked: (ChampItem) -> Unit
             itemView.setOnClickListener { onItemClicked(champion) }
             binding.apply {
                 champName.text = champion.champName
-                imageView.setImageResource(champion.imageResource)
+                imageView.setImageResource(champion.champImageResource)
+                rankListImg.setImageResource(champion.rankImageResource)
                 masteryPoints.text =
                     NumberFormat.getNumberInstance(Locale.US).format(champion.masteryPoints)
-
             }
         }
     }

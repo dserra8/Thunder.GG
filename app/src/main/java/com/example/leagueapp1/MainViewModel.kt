@@ -29,7 +29,7 @@ class MainViewModel @Inject constructor(
     private val summonerFlow = repository.summoner
 
     private val champListStateChannel = Channel<Repository.ChampListState>()
-    val champListEvents = champListStateChannel.receiveAsFlow()
+    private val champListEvents = champListStateChannel.receiveAsFlow()
 
    // private val championEventsFlow = repository.champListEvents
 
@@ -72,11 +72,11 @@ class MainViewModel @Inject constructor(
         preferencesManager.updateIsSummonerActive(isActive)
     }
 
-    fun collectPreferencesFlow() = viewModelScope.launch(Dispatchers.Main) {
-        preferencesFlow.collect { preferences ->
-            isActive = preferences.isSummonerActive
-        }
+    suspend fun collectPreferencesFlow() {
+        val data = preferencesFlow.first()
+        isActive = data.isSummonerActive
     }
+
 
     fun changeNavigationHeader(splashName: String) = viewModelScope.launch {
 

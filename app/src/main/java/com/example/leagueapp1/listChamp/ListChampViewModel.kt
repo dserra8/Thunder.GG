@@ -1,10 +1,13 @@
 package com.example.lBeagueapp1.ListChamp
 
 import androidx.lifecycle.*
+import androidx.navigation.NavDirections
 import com.example.leagueapp1.champListRecyclerView.ChampItem
+import com.example.leagueapp1.database.ChampRankInfo
 import com.example.leagueapp1.database.ChampionMastery
 import com.example.leagueapp1.database.PreferencesManager
 import com.example.leagueapp1.database.SortOrder
+import com.example.leagueapp1.listChamp.ListChampFragmentDirections
 import com.example.leagueapp1.repository.Repository
 import com.example.leagueapp1.util.filterChampionName
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -84,13 +87,30 @@ class ListChampViewModel @Inject constructor(
     val championList = champFlow.asLiveData()
 
     fun onClickChamp(champ: ChampItem) = viewModelScope.launch {
-        championListEventsChannel.send(ChampListEvents.NavigateToChampScreen(champ))
+        val champion = repository.getChampion(champ.id, summonerId = getCurrentSummoner().id)
+        val action = if (champion.rankInfo?.rank ?: "NONE" == "NONE") {
+            ListChampFragmentDirections.actionListChampFragmentToIntroChampFragment(champ)
+        } else {
+            ListChampFragmentDirections.actionListChampFragmentToChampScreenFragment(champ)
+        }
+        championListEventsChannel.send(ChampListEvents.NavigateToChampScreen(action))
+
     }
 
-//    fun makeChampItemList(data: List<ChampionMastery>, resources: Resources): List<ChampItem>{
-//
-//
-//    }
+    fun formatRankName(rank: String): String {
+        return when(rank){
+            "IRON" -> "emblem_iron"
+            "BRONZE" -> "bronze"
+            "SILVER" -> "silver"
+            "GOLD" -> "gold"
+            "PLATINUM" -> "platinum"
+            "DIAMOND" -> "diamond"
+            "MASTER" -> "master"
+            "GRANDMASTER" -> "grandmaster"
+            "CHALLENGER" -> "challenger"
+            else -> "@null"
+        }
+    }
 
     fun navigatedFromOtherScreen() {
         navigatedFromOtherScreen = true
@@ -124,7 +144,7 @@ class ListChampViewModel @Inject constructor(
         repository.getCurrentSummoner()
 
     sealed class ChampListEvents {
-        data class NavigateToChampScreen(val champ: ChampItem) : ChampListEvents()
+        data class NavigateToChampScreen(val action: NavDirections) : ChampListEvents()
         object GoTopOfList : ChampListEvents()
     }
 

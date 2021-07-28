@@ -1,8 +1,8 @@
 package com.example.leagueapp1.util
 
-class Constants {
-    companion object {
-        const val API_KEY = "RGAPI-1a502b96-a77b-4856-b571-6a27021b95e0"
+object Constants {
+
+        const val API_KEY = "RGAPI-258609f8-b41c-4b24-bc00-eaf9b7c36370"
         const val URL = "https://na1.api.riotgames.com/"
         const val ALL_CHAMPION_MASTERIES = "lol/champion-mastery/v4/champion-masteries/by-summoner/"
         const val SUMMONER_INFO = "lol/summoner/v4/summoners/by-name/"
@@ -182,5 +182,5 @@ class Constants {
             876 to "Lillia ",
             887 to "Gwen "
         )
-    }
+
 }

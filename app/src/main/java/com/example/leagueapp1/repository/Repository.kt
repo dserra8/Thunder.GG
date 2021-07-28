@@ -10,7 +10,7 @@ import com.example.leagueapp1.network.MatchDetails
 import com.example.leagueapp1.network.RankDetails
 import com.example.leagueapp1.network.RiotApiService
 import com.example.leagueapp1.util.Constants
-import com.example.leagueapp1.util.Constants.Companion.champMap
+import com.example.leagueapp1.util.Constants.champMap
 import com.example.leagueapp1.util.Resource
 import com.example.leagueapp1.util.networkBoundResource
 import kotlinx.coroutines.*
@@ -50,13 +50,15 @@ class Repository @Inject constructor(
         summonersDao.getSummonerFlow(true)
 
     suspend fun getCurrentSummoner(): SummonerProperties =
-        summonersDao.getSummoner(true)
+        summonersDao.getSummoner()
 
     suspend fun updateSummoner(summoner: SummonerProperties) =
         summonersDao.update(summoner)
 
-    suspend fun deleteSummoner(summoner: SummonerProperties) {
-        summonersDao.deleteSummoner(summoner)
+    suspend fun deleteCurrentSummonerAndChampions() {
+        val summoner = getCurrentSummoner()
+        championsDao.deleteSummonerChampions(summoner.id)
+        summonersDao.deleteCurrentSummoner()
     }
 
     private suspend fun getSummonerByName(summonerName: String): SummonerProperties? =
@@ -171,7 +173,7 @@ class Repository @Inject constructor(
             var highestPlayRate: Double? = champ?.BOTTOM?.playRate
 
             if (champ != null) {
-                for (i in 0..3) {
+                for (e in 0..3) {
                     if (highestPlayRate != null) {
                         highestPlayRate = when {
                             highestPlayRate < champ.JUNGLE.playRate -> champ.JUNGLE.playRate
@@ -209,10 +211,6 @@ class Repository @Inject constructor(
         return championsDao.getChampion(champId, summonerId)
     }
 
-    fun getChampionFlow(champId: Int, summonerId: String): Flow<ChampionMastery> {
-        return championsDao.getChampionFlow(champId, summonerId)
-    }
-
     suspend fun updateChampionRecentBoost(summonerId: String, champId: Int, boost: Int) {
         championsDao.updateChampionRecentBoost(summonerId, champId, boost)
     }
@@ -221,12 +219,8 @@ class Repository @Inject constructor(
         championsDao.updateChampionExperienceBoost(summonerId, champId, boost)
     }
 
-    suspend fun updateChampionRank(summonerId: String, champId: Int, lp: Int, rank: Constants.Companion.Ranks) {
+    suspend fun updateChampionRank(summonerId: String, champId: Int, lp: Int, rank: Constants.Ranks) {
         championsDao.updateChampionRank(summonerId, champId, lp, rank.toString())
-    }
-
-    suspend fun updateChampion(champion: ChampionMastery) {
-        championsDao.updateChampion(champion)
     }
 
     sealed class ChampListState {

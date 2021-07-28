@@ -65,7 +65,7 @@ class ListChampFragment : Fragment() {
             viewModel.floatingActionButtonClicked()
         }
 
-        binding.recyclerView.setOnScrollChangeListener { v, scrollX, scrollY, oldScrollX, oldScrollY ->
+        binding.recyclerView.setOnScrollChangeListener { _, _, _, _, _ ->
             if(binding.recyclerView.getCurrentPosition() >= 1){
                 binding.goToStartOfListButton.visibility = VISIBLE
             }
@@ -79,9 +79,7 @@ class ListChampFragment : Fragment() {
                 viewModel.championListEvents.collect { event ->
                     when (event) {
                         is ListChampViewModel.ChampListEvents.NavigateToChampScreen -> {
-                            val action =
-                                ListChampFragmentDirections.actionListChampFragmentToIntroChampFragment(event.champ)
-                            findNavController().navigate(action)
+                            findNavController().navigate(event.action)
                         }
                         is ListChampViewModel.ChampListEvents.GoTopOfList -> {
                             val layoutManager = binding.recyclerView.layoutManager as LinearLayoutManager
@@ -145,13 +143,16 @@ class ListChampFragment : Fragment() {
             val photoName = viewModel.formatPhotoName(name)
             val imageId: Int =
                 resources.getIdentifier(photoName, "drawable", activity?.packageName)
+            val rankImgName = viewModel.formatRankName(champion.rankInfo?.rank ?: "NONE")
+            val rankImgId = resources.getIdentifier(rankImgName, "drawable", activity?.packageName)
 
             list.add(
                 ChampItem(
                     imageId,
                     name,
                     champion.championId,
-                    champion.championPoints.toInt()
+                    champion.championPoints.toInt(),
+                    rankImgId
                 )
             )
         }

@@ -1,20 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="70dp"
-        android:layout_marginTop="2dp"
-        android:layout_marginBottom="2dp"
+        android:layout_marginTop="0dp"
+        android:layout_marginBottom="0dp"
         android:clickable="true"
         android:focusable="true"
+        app:cardBackgroundColor="#00ffffff"
         android:foreground="?selectableItemBackground">
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/home_screen_drawable"
-            android:padding="8dp">
+            android:background="@null"
+            android:padding="7dp">
 
 
             <ImageView
@@ -28,12 +30,11 @@
                 android:id="@+id/champName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="117dp"
+                android:layout_marginStart="100dp"
                 android:layout_toEndOf="@+id/image_view"
                 android:fontFamily="@font/alice"
-
                 android:text="Line 1"
-                android:textColor="@android:color/black"
+                android:textColor="@color/colorOfAllTexts"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -42,12 +43,18 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/champName"
-                android:layout_marginStart="117dp"
+                android:layout_marginStart="100dp"
                 android:layout_toEndOf="@+id/image_view"
                 android:text="TextView"
-
                 android:textAlignment="viewStart"
                 android:textSize="12sp" />
+
+            <ImageView
+                android:id="@+id/rankListImg"
+                android:layout_width="63dp"
+                android:layout_height="63dp"
+                android:layout_alignParentEnd="true"
+                app:srcCompat="@null" />
 
 
         </RelativeLayout>

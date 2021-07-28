@@ -15,7 +15,7 @@
         android:id="@+id/constraintLayout2"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/primaryDarkColor"
+        android:background="@drawable/home_screen_drawable"
         app:layoutDescription="@xml/intro_champ_layout_xml_constraintlayout2_scene">
 
 
@@ -43,8 +43,8 @@
             android:id="@+id/loadingText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Calculating Initial Ranking"
-            android:textColor="@android:color/white"
+            android:text="Calculating Ranking"
+            android:textColor="@color/colorOfAllTexts"
             android:textSize="24sp"
             android:textStyle="bold"
             app:layout_constraintBottom_toTopOf="@+id/loadingProgressCircle"
@@ -66,7 +66,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@{@string/lp_text_format(viewModel.lpText)}"
-            android:textColor="@android:color/white"
+            android:textColor="@color/colorOfAllTexts"
             android:textSize="25sp"
             android:textStyle="bold"
             tools:text="50 LP"

@@ -5,7 +5,7 @@ import com.example.leagueapp1.R
 import com.example.leagueapp1.champListRecyclerView.ChampItem
 import com.example.leagueapp1.network.MatchDetails
 import com.example.leagueapp1.repository.Repository
-import com.example.leagueapp1.util.Constants.*
+import com.example.leagueapp1.util.Constants
 import com.example.leagueapp1.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -144,7 +144,7 @@ class IntroChampViewModel @Inject constructor(
 
     fun recentBoostReady(introChamp: ChampItem) = viewModelScope.launch {
         val champion = repository.getChampion(champId = introChamp.id, summonerId = summonerFlow.value?.id!!)
-        val experienceBoost = if (champion.rankInfo.experienceBoost == null) {
+        val experienceBoost = if (champion.rankInfo?.experienceBoost == null) {
             val boost = calculateExperienceBoost(introChamp)
             repository.updateChampionExperienceBoost(
                 summonerId = summonerFlow.value?.id!!,
@@ -155,7 +155,8 @@ class IntroChampViewModel @Inject constructor(
         } else {
             champion.rankInfo.experienceBoost
         }
-        introChampEventsChannel.send(IntroChampEvents.InitBoostReady(champion.rankInfo.recentBoost + experienceBoost))
+        introChampEventsChannel.send(IntroChampEvents.InitBoostReady((champion.rankInfo?.recentBoost
+            ?: 0) + experienceBoost))
     }
 
     suspend fun updateChampionRank(lp: Int, rankKey: Int, champId: Int) {
@@ -170,29 +171,29 @@ class IntroChampViewModel @Inject constructor(
 
     fun chooseRankImage(value: Int): Int {
         return when (calculateRank(value * lpSeparation)) {
-            Companion.Ranks.IRON -> R.drawable.emblem_iron
-            Companion.Ranks.BRONZE -> R.drawable.bronze
-            Companion.Ranks.SILVER -> R.drawable.silver
-            Companion.Ranks.GOLD -> R.drawable.gold
-            Companion.Ranks.PLATINUM -> R.drawable.platinum
-            Companion.Ranks.DIAMOND -> R.drawable.diamond
-            Companion.Ranks.MASTER -> R.drawable.master
-            Companion.Ranks.GRANDMASTER -> R.drawable.grandmaster
+            Constants.Ranks.IRON -> R.drawable.emblem_iron
+            Constants.Ranks.BRONZE -> R.drawable.bronze
+            Constants.Ranks.SILVER -> R.drawable.silver
+            Constants.Ranks.GOLD -> R.drawable.gold
+            Constants.Ranks.PLATINUM -> R.drawable.platinum
+            Constants.Ranks.DIAMOND -> R.drawable.diamond
+            Constants.Ranks.MASTER -> R.drawable.master
+            Constants.Ranks.GRANDMASTER -> R.drawable.grandmaster
             else -> R.drawable.challenger
         }
     }
 
-    private fun calculateRank(value: Int): Companion.Ranks {
+    private fun calculateRank(value: Int): Constants.Ranks {
         return when (value) {
-            in 0 until lpSeparation -> Companion.Ranks.IRON
-            in lpSeparation until lpSeparation*2 -> Companion.Ranks.BRONZE
-            in lpSeparation*2 until lpSeparation*3 -> Companion.Ranks.SILVER
-            in lpSeparation*3 until lpSeparation*4 -> Companion.Ranks.GOLD
-            in lpSeparation*4 until lpSeparation*5 -> Companion.Ranks.PLATINUM
-            in lpSeparation*5 until lpSeparation*6 -> Companion.Ranks.DIAMOND
-            in lpSeparation*6 until lpSeparation*7 -> Companion.Ranks.MASTER
-            in lpSeparation*7 until lpSeparation*8 -> Companion.Ranks.GRANDMASTER
-            else -> Companion.Ranks.CHALLENGER
+            in 0 until lpSeparation -> Constants.Ranks.IRON
+            in lpSeparation until lpSeparation*2 -> Constants.Ranks.BRONZE
+            in lpSeparation*2 until lpSeparation*3 -> Constants.Ranks.SILVER
+            in lpSeparation*3 until lpSeparation*4 -> Constants.Ranks.GOLD
+            in lpSeparation*4 until lpSeparation*5 -> Constants.Ranks.PLATINUM
+            in lpSeparation*5 until lpSeparation*6 -> Constants.Ranks.DIAMOND
+            in lpSeparation*6 until lpSeparation*7 -> Constants.Ranks.MASTER
+            in lpSeparation*7 until lpSeparation*8 -> Constants.Ranks.GRANDMASTER
+            else -> Constants.Ranks.CHALLENGER
         }
     }
 

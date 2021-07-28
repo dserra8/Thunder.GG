@@ -1,8 +1,9 @@
 package com.example.leagueapp1
 
+
 import android.annotation.SuppressLint
 import android.content.Context
-import androidx.appcompat.app.AppCompatActivity
+import android.graphics.PixelFormat
 import android.os.Bundle
 import android.view.MotionEvent
 import android.view.View
@@ -11,7 +12,10 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.drawerlayout.widget.DrawerLayout.*
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -38,8 +42,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import org.w3c.dom.Text
 import java.util.concurrent.TimeUnit
+
 
 @AndroidEntryPoint
 class MainActivity: AppCompatActivity() {
@@ -58,7 +62,7 @@ class MainActivity: AppCompatActivity() {
 
     private lateinit var headerView: View
 
-    private var isActive: Boolean = false
+    private var shouldCheckDrawer: Boolean = true
 
     @ExperimentalCoroutinesApi
     @SuppressLint("WrongConstant")
@@ -67,20 +71,33 @@ class MainActivity: AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        val toolbar = findViewById<Toolbar>(R.id.my_toolbar)
+        toolbar.title = "Thunder.GG"
+        setSupportActionBar(toolbar)
+
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.findNavController()
 
         drawerLayout = findViewById(R.id.drawerLayout)
         navigationView.setupWithNavController(navController)
-        appBarConfiguration = AppBarConfiguration(setOf(R.id.homeFragment, R.id.listChampFragment), drawerLayout)
+        appBarConfiguration = AppBarConfiguration(
+            setOf(R.id.homeFragment, R.id.listChampFragment, R.id.settingsFragment),
+            drawerLayout
+        )
         setupActionBarWithNavController(navController, appBarConfiguration)
+
 
 //        supportActionBar?.displayOptions = ActionBar.DISPLAY_SHOW_CUSTOM
 //        supportActionBar?.setCustomView(R.layout.action_bar_layout)
 
+
         val navigationView: NavigationView = findViewById(R.id.navigationView)
         headerView = navigationView.inflateHeaderView(R.layout.navigation_header)
+
+        val menu = navigationView.menu
+        val pickChampionItem = menu.findItem(R.id.listChampFragment)
+        pickChampionItem.isVisible = false
         val summonerName = headerView.findViewById<TextView>(R.id.navigationSummonerName)
         val iconImg = headerView.findViewById<ImageView>(R.id.navigationSummonerIcon)
         val splashArt = headerView.findViewById<ImageView>(R.id.navigationSplashArt)
@@ -128,15 +145,44 @@ class MainActivity: AppCompatActivity() {
         }
 
         lifecycleScope.launch(Dispatchers.Main) {
-            val data = viewModel.preferencesFlow.first()
-            isActive = data.isSummonerActive
-
-            if(isActive)
+            viewModel.collectPreferencesFlow()
+            if(viewModel.isActive)
                 navController.navigate(HomeFragmentDirections.actionHomeFragmentToListChampFragment())
         }
 
         delayedInit()
 
+      window.setFormat(PixelFormat.RGBA_8888)
+
+
+        drawerLayout.addDrawerListener(object : DrawerListener {
+            override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
+                //Called when a drawer's position changes.
+                if( slideOffset > 0.0f && shouldCheckDrawer) {
+                    shouldCheckDrawer = false
+                    lifecycleScope.launch(Dispatchers.Main) {
+                        viewModel.collectPreferencesFlow()
+                        pickChampionItem.isVisible = viewModel.isActive
+                    }
+                }
+            }
+            override fun onDrawerOpened(drawerView: View) {
+                //Called when a drawer has settled in a completely open state.
+                //The drawer is interactive at this point.
+                // If you have 2 drawers (left and right) you can distinguish
+                // them by using id of the drawerView. int id = drawerView.getId();
+                // id will be your layout's id: for example R.id.left_drawer
+            }
+
+            override fun onDrawerClosed(drawerView: View) {
+                // Called when a drawer has settled in a completely closed state.
+                shouldCheckDrawer = true
+            }
+
+            override fun onDrawerStateChanged(newState: Int) {
+                // Called when the drawer motion state changes. The new state will be one of STATE_IDLE, STATE_DRAGGING or STATE_SETTLING.
+            }
+        })
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {

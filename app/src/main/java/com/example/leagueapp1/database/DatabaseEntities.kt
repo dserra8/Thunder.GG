@@ -39,7 +39,7 @@ data class ChampionMastery(
     val summonerId: String,
     var champName: String,
     val timeReceived: Long,
-    @Embedded val rankInfo: ChampRankInfo,
+    @Embedded val rankInfo: ChampRankInfo? = null,
     @Embedded var roles: TrueRoles? = null
 //    @Ignore val status: Status
 )
@@ -48,7 +48,7 @@ data class ChampRankInfo(
     val recentBoost: Int = 0,
     val experienceBoost: Int? = null,
     val lp: Int = 0,
-    val rank: String = "IRON"
+    val rank: String = "NONE"
 )
 data class Status(
     val message: String,

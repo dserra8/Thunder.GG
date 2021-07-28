@@ -10,8 +10,8 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.leagueapp1.databinding.ChampItemBinding
 import com.example.leagueapp1.databinding.SummonerHeaderBinding
-import com.example.leagueapp1.util.Constants.Companion.PROFILE_ICON_URL
-import com.example.leagueapp1.util.Constants.Companion.SPLASH_ART_URL
+import com.example.leagueapp1.util.Constants.PROFILE_ICON_URL
+import com.example.leagueapp1.util.Constants.SPLASH_ART_URL
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -81,7 +81,7 @@ class ChampionListAdapterWithHeader(private val onItemClicked: (ChampItem) ->Uni
             itemView.setOnClickListener { onItemClicked(champion) }
             binding.apply {
                 champName.text = champion.champName
-                imageView.setImageResource(champion.imageResource)
+                imageView.setImageResource(champion.champImageResource)
                 masteryPoints.text = NumberFormat.getNumberInstance(Locale.US).format(champion.masteryPoints)
 
             }

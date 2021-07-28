@@ -106,9 +106,17 @@ class IntroChampFragment: Fragment(R.layout.intro_champ_layout) {
                 }
                 animator.doOnStart {
                     binding.constraintLayout2.transitionToEnd()
+                    rankImg.animate().apply {
+                        duration = 1500
+                        rotationYBy(360f)
+                    }.start()
                     circularProgress.indeterminateMode = false
                 }
                 animator.doOnRepeat {
+                    rankImg.animate().apply {
+                        duration = 1500
+                        rotationYBy(360f)
+                    }.start()
                     repeatNum++
                     rankImg.setImageResource(chooseRankImage(repeatNum))
                 }
@@ -116,6 +124,12 @@ class IntroChampFragment: Fragment(R.layout.intro_champ_layout) {
                 animator.doOnEnd {
                     if (repeatNum < repeatCount) {
                         rankImg.setImageResource(chooseRankImage(repeatNum + 1))
+                    }
+                    if (leftOver > 0) {
+                        rankImg.animate().apply {
+                            duration = 1500
+                            rotationYBy(360f)
+                        }.start()
                     }
                     val animatorEnd: ValueAnimator = ValueAnimator.ofInt(0, leftOver)
                     animatorEnd.duration = 2000

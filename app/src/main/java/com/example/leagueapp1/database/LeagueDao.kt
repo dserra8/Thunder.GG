@@ -2,7 +2,6 @@ package com.example.leagueapp1.database
 
 import androidx.lifecycle.LiveData
 import androidx.room.*
-import com.example.leagueapp1.util.Constants.*
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -17,8 +16,8 @@ interface SummonersDao {
     @Query("SELECT * FROM summoners WHERE current=:current")
     fun getSummonerFlow(current: Boolean): Flow<SummonerProperties?>
 
-    @Query("SELECT * FROM summoners WHERE current=:current")
-    suspend fun getSummoner(current: Boolean): SummonerProperties
+    @Query("SELECT * FROM summoners WHERE current=1")
+    suspend fun getSummoner(): SummonerProperties
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSummoner(summoner: SummonerProperties)
@@ -29,8 +28,8 @@ interface SummonersDao {
     @Query("DELETE FROM summoners")
     suspend fun deleteAllSummoners()
 
-    @Delete
-    suspend fun deleteSummoner(summoner: SummonerProperties)
+    @Query("DELETE FROM summoners WHERE current=1")
+    suspend fun deleteCurrentSummoner()
 
     @Query("SELECT COUNT(*) FROM summoners WHERE name=:summonerName AND timeReceived >=:time")
     suspend fun isFreshSummoner(summonerName: String, time: Long): Int
@@ -91,6 +90,9 @@ interface ChampionsDao {
 
     @Query("DELETE FROM summonerChampions")
     suspend fun deleteAllChampions()
+
+    @Query("DELETE FROM summonerChampions WHERE summonerId=:id")
+    suspend fun deleteSummonerChampions(id: String)
 
     @Query("SELECT COUNT(*) FROM summonerChampions WHERE summonerId=:summonerId AND timeReceived >=:time")
     suspend fun isFreshSummonerChampions(summonerId: String, time: Long): Int
