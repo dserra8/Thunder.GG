@@ -1,15 +1,13 @@
 package com.example.leagueapp1.util
 
 object Constants {
-
-        const val API_KEY = "RGAPI-258609f8-b41c-4b24-bc00-eaf9b7c36370"
         const val URL = "https://na1.api.riotgames.com/"
         const val ALL_CHAMPION_MASTERIES = "lol/champion-mastery/v4/champion-masteries/by-summoner/"
         const val SUMMONER_INFO = "lol/summoner/v4/summoners/by-name/"
         const val MATCH_LIST = "https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/"
         const val MATCH_DETAIL_URL = "https://americas.api.riotgames.com/lol/match/v5/matches/"
         const val CHAMPION_RATES_URL = "http://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/championrates.json"
-        const val PROFILE_ICON_URL = "http://ddragon.leagueoflegends.com/cdn/11.12.1/img/profileicon/"
+        const val PROFILE_ICON_URL = "http://ddragon.leagueoflegends.com/cdn/11.15.1/img/profileicon/"
         const val SPLASH_ART_URL = "http://ddragon.leagueoflegends.com/cdn/img/champion/splash/"
         const val SUMMONER_RANK_URL = "https://na1.api.riotgames.com/lol/league/v4/entries/by-summoner/"
 

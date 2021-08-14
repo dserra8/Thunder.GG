@@ -2,6 +2,7 @@ package com.example.leagueapp1
 
 import androidx.lifecycle.*
 import com.example.leagueapp1.database.PreferencesManager
+import com.example.leagueapp1.repository.LeagueRepository
 import com.example.leagueapp1.repository.Repository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -24,11 +25,11 @@ class MainViewModel @Inject constructor(
     private val mainActivityEventsChannel = Channel<MainActivityEvents>()
     val mainActivityEvents = mainActivityEventsChannel.receiveAsFlow()
 
-    val preferencesFlow = preferencesManager.mainPreferencesFlow
+    private val preferencesFlow = preferencesManager.mainPreferencesFlow
 
     private val summonerFlow = repository.summoner
 
-    private val champListStateChannel = Channel<Repository.ChampListState>()
+    private val champListStateChannel = Channel<LeagueRepository.ChampListState>()
     private val champListEvents = champListStateChannel.receiveAsFlow()
 
    // private val championEventsFlow = repository.champListEvents
@@ -47,7 +48,7 @@ class MainViewModel @Inject constructor(
     val headerInfo = headerFlow.asLiveData()
 
     fun triggerHeaderChannel(splashName: String) = viewModelScope.launch{
-        champListStateChannel.send(Repository.ChampListState.Ready(splashName))
+        champListStateChannel.send(LeagueRepository.ChampListState.Ready(splashName))
     }
 
     fun updateActionBarTitle(title: String, ishome: Boolean) {

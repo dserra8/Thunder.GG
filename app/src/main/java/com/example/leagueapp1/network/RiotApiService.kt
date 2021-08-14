@@ -3,29 +3,27 @@ package com.example.leagueapp1.network
 
 import com.example.leagueapp1.database.ChampionMastery
 import com.example.leagueapp1.database.SummonerProperties
-import kotlinx.coroutines.Deferred
 import retrofit2.Response
 import retrofit2.http.GET
-
 import retrofit2.http.Url
 
 interface RiotApiService {
 
     @GET
-    fun getSummonerPropertiesAsync(@Url url:String): Deferred<SummonerProperties>
+    suspend fun getSummonerPropertiesAsync(@Url url:String): Response<SummonerProperties>
 
     @GET
-    fun getChampionRatesAsync(@Url url:String): Deferred<ChampionRoles>
+    suspend fun getChampionRatesAsync(@Url url:String): Response<ChampionRoles>
 
     @GET
-    suspend fun getAllChampionMasteries(@Url url:String): List<ChampionMastery>
+    suspend fun getAllChampionMasteries(@Url url:String): Response<List<ChampionMastery>>
 
     @GET
-    fun getMatchListAsync(@Url url:String): Deferred<List<String>>
+    suspend fun getMatchListAsync(@Url url:String): Response<List<String>>
 
     @GET
-    fun getMatchDetailsAsync(@Url url:String): Deferred<MatchDetails>
+    suspend fun getMatchDetailsAsync(@Url url:String): Response<MatchDetails>
 
     @GET
-    fun getSummonerRankAsync(@Url url:String): Deferred<List<RankDetails>>
+    suspend fun getSummonerRankAsync(@Url url:String): Response<List<RankDetails>>
 }

@@ -104,6 +104,13 @@ class HomeFragment : Fragment() {
                                     HomeFragmentDirections.actionHomeFragmentToListChampFragment()
                                 )
                             }
+                            is HomeViewModel.HomeEvents.RoleListFailed -> {
+                                Snackbar.make(
+                                    requireView(),
+                                    event.errorMessage,
+                                    Snackbar.LENGTH_SHORT
+                                ).show()
+                            }
                         }.exhaustive
                     }
                 }

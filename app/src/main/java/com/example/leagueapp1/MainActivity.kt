@@ -29,13 +29,13 @@ import androidx.navigation.ui.setupWithNavController
 import androidx.work.*
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.example.leagueapp1.databinding.ActivityMainBinding
 import com.example.leagueapp1.home.HomeFragmentDirections
 import com.example.leagueapp1.util.Constants
 import com.example.leagueapp1.util.exhaustive
 import com.example.leagueapp1.work.RefreshChampionRolesWorker
 import com.google.android.material.navigation.NavigationView
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -46,9 +46,11 @@ import java.util.concurrent.TimeUnit
 
 
 @AndroidEntryPoint
-class MainActivity: AppCompatActivity() {
+class MainActivity : AppCompatActivity() {
 
     private val applicationScope = CoroutineScope(Dispatchers.Default)
+
+    private lateinit var binding: ActivityMainBinding
 
     private val viewModel: MainViewModel by viewModels()
 
@@ -69,9 +71,11 @@ class MainActivity: AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        val view = binding.root
+        setContentView(view)
 
-        val toolbar = findViewById<Toolbar>(R.id.my_toolbar)
+        val toolbar = binding.myToolbar
         toolbar.title = "Thunder.GG"
         setSupportActionBar(toolbar)
 
@@ -79,8 +83,8 @@ class MainActivity: AppCompatActivity() {
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.findNavController()
 
-        drawerLayout = findViewById(R.id.drawerLayout)
-        navigationView.setupWithNavController(navController)
+        drawerLayout = binding.drawerLayout
+        binding.navigationView.setupWithNavController(navController)
         appBarConfiguration = AppBarConfiguration(
             setOf(R.id.homeFragment, R.id.listChampFragment, R.id.settingsFragment),
             drawerLayout
@@ -88,11 +92,7 @@ class MainActivity: AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
 
 
-//        supportActionBar?.displayOptions = ActionBar.DISPLAY_SHOW_CUSTOM
-//        supportActionBar?.setCustomView(R.layout.action_bar_layout)
-
-
-        val navigationView: NavigationView = findViewById(R.id.navigationView)
+        val navigationView: NavigationView = binding.navigationView
         headerView = navigationView.inflateHeaderView(R.layout.navigation_header)
 
         val menu = navigationView.menu
@@ -102,8 +102,8 @@ class MainActivity: AppCompatActivity() {
         val iconImg = headerView.findViewById<ImageView>(R.id.navigationSummonerIcon)
         val splashArt = headerView.findViewById<ImageView>(R.id.navigationSplashArt)
 
-        viewModel.headerInfo.observe(this){ headerInfo ->
-            if(headerInfo != null){
+        viewModel.headerInfo.observe(this) { headerInfo ->
+            if (headerInfo != null) {
                 viewModel.changeNavigationHeader("Kayle")
                 summonerName.text = headerInfo.name
                 val profileIconUrl = "${Constants.PROFILE_ICON_URL}${headerInfo.summonerIconId}.png"
@@ -135,8 +135,6 @@ class MainActivity: AppCompatActivity() {
                             supportActionBar?.setTitle("Thunder.GG")
                         }
                         is MainViewModel.MainActivityEvents.ChangeActionBarOther -> {
-//                            val customBar = supportActionBar?.customView
-//                            val text = customBar?.findViewById<TextView>(R.id.nameInBar)!!
                             supportActionBar?.setTitle(event.name)
                         }
                     }.exhaustive
@@ -146,19 +144,19 @@ class MainActivity: AppCompatActivity() {
 
         lifecycleScope.launch(Dispatchers.Main) {
             viewModel.collectPreferencesFlow()
-            if(viewModel.isActive)
+            if (viewModel.isActive)
                 navController.navigate(HomeFragmentDirections.actionHomeFragmentToListChampFragment())
         }
 
         delayedInit()
 
-      window.setFormat(PixelFormat.RGBA_8888)
+        window.setFormat(PixelFormat.RGBA_8888)
 
 
         drawerLayout.addDrawerListener(object : DrawerListener {
             override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
                 //Called when a drawer's position changes.
-                if( slideOffset > 0.0f && shouldCheckDrawer) {
+                if (slideOffset > 0.0f && shouldCheckDrawer) {
                     shouldCheckDrawer = false
                     lifecycleScope.launch(Dispatchers.Main) {
                         viewModel.collectPreferencesFlow()
@@ -166,6 +164,7 @@ class MainActivity: AppCompatActivity() {
                     }
                 }
             }
+
             override fun onDrawerOpened(drawerView: View) {
                 //Called when a drawer has settled in a completely open state.
                 //The drawer is interactive at this point.
@@ -197,7 +196,8 @@ class MainActivity: AppCompatActivity() {
                         val y: Float = event.rawY + view.getTop() - touchCoordinates[1]
                         //If the touch position is outside the EditText then we hide the keyboard
                         if (x < view.getLeft() || x >= view.getRight() || y < view.getTop() || y > view.getBottom()) {
-                            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                            val imm =
+                                getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                             imm.hideSoftInputFromWindow(view.windowToken, 0)
                             view.clearFocus()
                         }
@@ -209,7 +209,7 @@ class MainActivity: AppCompatActivity() {
     }
 
     override fun onSupportNavigateUp(): Boolean {
-      //  val navController = findNavController(R.id.nav_host_fragment)
+        //  val navController = findNavController(R.id.nav_host_fragment)
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 
@@ -218,17 +218,18 @@ class MainActivity: AppCompatActivity() {
 
             val constraints = Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.UNMETERED)
-                .setRequiresBatteryNotLow(true)
+                .setRequiredNetworkType(NetworkType.CONNECTED)
                 .setRequiresCharging(true)
                 .setRequiresDeviceIdle(true)
                 .build()
 
             val repeatingRequest = PeriodicWorkRequestBuilder<RefreshChampionRolesWorker>(
-                1,
-                TimeUnit.DAYS
-            ).setConstraints(constraints).build()
+                1, TimeUnit.DAYS,
+                15, TimeUnit.MINUTES
+            )
+                .setConstraints(constraints).build()
 
-            WorkManager.getInstance().enqueueUniquePeriodicWork(
+            WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
                 RefreshChampionRolesWorker.WORK_NAME,
                 ExistingPeriodicWorkPolicy.KEEP,
                 repeatingRequest

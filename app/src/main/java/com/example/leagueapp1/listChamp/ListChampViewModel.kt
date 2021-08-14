@@ -3,12 +3,11 @@ package com.example.lBeagueapp1.ListChamp
 import androidx.lifecycle.*
 import androidx.navigation.NavDirections
 import com.example.leagueapp1.champListRecyclerView.ChampItem
-import com.example.leagueapp1.database.ChampRankInfo
 import com.example.leagueapp1.database.ChampionMastery
 import com.example.leagueapp1.database.PreferencesManager
 import com.example.leagueapp1.database.SortOrder
 import com.example.leagueapp1.listChamp.ListChampFragmentDirections
-import com.example.leagueapp1.repository.Repository
+import com.example.leagueapp1.repository.LeagueRepository
 import com.example.leagueapp1.util.filterChampionName
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,7 +21,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ListChampViewModel @Inject constructor(
-    private val repository: Repository,
+    private val repository: LeagueRepository,
     private val preferencesManager: PreferencesManager,
     private val state: SavedStateHandle
 ) : ViewModel() {
@@ -87,8 +86,8 @@ class ListChampViewModel @Inject constructor(
     val championList = champFlow.asLiveData()
 
     fun onClickChamp(champ: ChampItem) = viewModelScope.launch {
-        val champion = repository.getChampion(champ.id, summonerId = getCurrentSummoner().id)
-        val action = if (champion.rankInfo?.rank ?: "NONE" == "NONE") {
+        val champion = getCurrentSummoner()?.let { repository.getChampion(champ.id, summonerId = it.id) }
+        val action = if (champion?.rankInfo?.rank ?: "NONE" == "NONE") {
             ListChampFragmentDirections.actionListChampFragmentToIntroChampFragment(champ)
         } else {
             ListChampFragmentDirections.actionListChampFragmentToChampScreenFragment(champ)
@@ -133,14 +132,14 @@ class ListChampViewModel @Inject constructor(
             "Wukong" -> "monkeyking"
             else -> photoName
         }
-        return photoName.toLowerCase(Locale.ROOT)
+        return photoName.lowercase(Locale.ROOT)
     }
 
     fun floatingActionButtonClicked() = viewModelScope.launch {
         championListEventsChannel.send(ChampListEvents.GoTopOfList)
     }
 
-    suspend fun getCurrentSummoner() =
+    private suspend fun getCurrentSummoner() =
         repository.getCurrentSummoner()
 
     sealed class ChampListEvents {

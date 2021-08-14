@@ -85,6 +85,7 @@ class ListChampFragment : Fragment() {
                             val layoutManager = binding.recyclerView.layoutManager as LinearLayoutManager
                             layoutManager.smoothScrollToPosition(binding.recyclerView, null, 0)
                         }
+                        else -> {}
                     }.exhaustive
                 }
             }

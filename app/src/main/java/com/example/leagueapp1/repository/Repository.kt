@@ -3,26 +3,29 @@ package com.example.leagueapp1.repository
 
 import androidx.lifecycle.LiveData
 import androidx.room.withTransaction
+import androidx.work.ListenableWorker
+import com.example.leagueapp1.BuildConfig
 import com.example.leagueapp1.champListRecyclerView.HeaderItem
 import com.example.leagueapp1.database.*
-import com.example.leagueapp1.network.ChampionRoles
-import com.example.leagueapp1.network.MatchDetails
-import com.example.leagueapp1.network.RankDetails
-import com.example.leagueapp1.network.RiotApiService
+import com.example.leagueapp1.network.*
+import com.example.leagueapp1.repository.LeagueRepository.Companion.FRESH_TIMEOUT
 import com.example.leagueapp1.util.Constants
 import com.example.leagueapp1.util.Constants.champMap
 import com.example.leagueapp1.util.Resource
+import com.example.leagueapp1.util.exhaustive
 import com.example.leagueapp1.util.networkBoundResource
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
-import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import retrofit2.Response
 import javax.inject.Inject
 
 
 class Repository @Inject constructor(
     private val api: RiotApiService,
-    private val db: LeagueDatabase
-) {
+    private val db: LeagueDatabase,
+) : LeagueRepository {
 
     private val summonersDao = db.summonersDao()
     private val championsDao = db.championsDao()
@@ -33,38 +36,40 @@ class Repository @Inject constructor(
      * Network and Database Functions for Summoners
      */
 
-    val summoner: Flow<SummonerProperties?> = getSummonerFlow()
+    override val summoner: Flow<SummonerProperties?> = getSummonerFlow()
 
 
-    private fun getSummonerPropertiesAsync(url: String): Deferred<SummonerProperties> {
+    override suspend fun getSummonerPropertiesAsync(url: String): Response<SummonerProperties> {
         return api.getSummonerPropertiesAsync(url)
     }
 
-    fun getAllSummoners(): Flow<List<SummonerProperties>> =
+    override fun getAllSummoners(): Flow<List<SummonerProperties>> =
         summonersDao.getAllSummoners()
 
-    private suspend fun insertSummoner(summoner: SummonerProperties) =
+    override suspend fun insertSummoner(summoner: SummonerProperties) =
         summonersDao.insertSummoner(summoner)
 
-    private fun getSummonerFlow(): Flow<SummonerProperties?> =
-        summonersDao.getSummonerFlow(true)
+    override fun getSummonerFlow(): Flow<SummonerProperties?> =
+        summonersDao.getSummonerFlow()
 
-    suspend fun getCurrentSummoner(): SummonerProperties =
+    override suspend fun getCurrentSummoner(): SummonerProperties? =
         summonersDao.getSummoner()
 
-    suspend fun updateSummoner(summoner: SummonerProperties) =
+    override suspend fun updateSummoner(summoner: SummonerProperties) =
         summonersDao.update(summoner)
 
-    suspend fun deleteCurrentSummonerAndChampions() {
+    override suspend fun deleteCurrentSummonerAndChampions() {
         val summoner = getCurrentSummoner()
-        championsDao.deleteSummonerChampions(summoner.id)
+        if (summoner != null) {
+            championsDao.deleteSummonerChampions(summoner.id)
+        }
         summonersDao.deleteCurrentSummoner()
     }
 
-    private suspend fun getSummonerByName(summonerName: String): SummonerProperties? =
+    override suspend fun getSummonerByName(summonerName: String): SummonerProperties? =
         summonersDao.getSummonerByName(summonerName)
 
-    suspend fun checkAndReturnSummoner(summonerName: String): Resource<SummonerProperties> {
+    override suspend fun checkAndReturnSummoner(summonerName: String): Resource<SummonerProperties> {
         val result = refreshSummoner(summonerName)
         val daoResponse = getSummonerByName(summonerName)
         if (daoResponse != null)
@@ -75,39 +80,51 @@ class Repository @Inject constructor(
         return Resource.Success(daoResponse!!)
     }
 
-    private suspend fun refreshSummoner(summonerName: String): Exception? {
+    override suspend fun refreshSummoner(summonerName: String): Exception? {
         val isSummonerFresh =
             summonersDao.isFreshSummoner(summonerName, System.currentTimeMillis() - FRESH_TIMEOUT)
         if (isSummonerFresh == 0) {
             //Refresh Data
-            val response =
-                getSummonerPropertiesAsync("${Constants.SUMMONER_INFO}$summonerName?api_key=${Constants.API_KEY}")
-            return try {
-                val summoner = response.await()
-                val rankList = getSummonerSoloRank(summoner.id)
+            val response = safeApiCall {
+                getSummonerPropertiesAsync("${Constants.SUMMONER_INFO}$summonerName?api_key=${BuildConfig.API_KEY}")
+            }
+            response.onSuccess { summoner ->
+                val rankListResponse = getSummonerSoloRank(summoner.id)
                 var rank: String? = null
-                if (rankList != null && rankList.isNotEmpty()) {
-                    for (obj in rankList) {
-                        when (obj.queueType) {
-                            "RANKED_SOLO_5x5" -> {
-                                rank = obj.tier
-                                break
+                when (rankListResponse) {
+                    is Resource.Error ->{
+                        return Exception(rankListResponse.error)
+                    }
+                    is Resource.Loading -> {
+                        return Exception("Error while loading Summoner rank list")
+                    }
+                    is Resource.Success -> {
+                        val rankList = rankListResponse.data!!
+                        if (rankList.isNotEmpty()) {
+                            for (obj in rankList) {
+                                when (obj.queueType) {
+                                    "RANKED_SOLO_5x5" -> {
+                                        rank = obj.tier
+                                        break
+                                    }
+                                }
                             }
-                            else ->{ break }
                         }
+                        val updatedSummoner =
+                            summoner.copy(timeReceived = System.currentTimeMillis(), rank = rank)
+                        insertSummoner(updatedSummoner)
+                        return null
                     }
                 }
-                val updatedSummoner = summoner.copy(timeReceived = System.currentTimeMillis(), rank = rank)
-                insertSummoner(updatedSummoner)
-                null
-            } catch (e: Exception) {
-                e
+            }
+            response.onFailure {
+                return Exception("Summoner Not Found")
             }
         }
         return null
     }
 
-    private suspend fun updateSummonerList(summonerID: String) {
+    override suspend fun updateSummonerList(summonerID: String) {
         val summonerList = getAllSummoners().first()
 
         for (summoner in summonerList) {
@@ -117,52 +134,75 @@ class Repository @Inject constructor(
 
     }
 
-    private suspend fun getSummonerSoloRank(summonerId: String): List<RankDetails>? {
-        val response =
-            api.getSummonerRankAsync("${Constants.SUMMONER_RANK_URL}$summonerId?api_key=${Constants.API_KEY}")
-        return try {
-            response.await()
-        } catch (e: Exception) {
-             null
+    override suspend fun getSummonerSoloRank(summonerId: String): Resource<List<RankDetails>?> {
+        val response = safeApiCall{
+            api.getSummonerRankAsync("${Constants.SUMMONER_RANK_URL}$summonerId?api_key=${BuildConfig.API_KEY}")
         }
+        var result: Resource<List<RankDetails>?> = Resource.Loading()
+        response.onSuccess {
+            result = Resource.Success(it)
+        }
+        response.onFailure {
+            result = Resource.Error(it)
+        }
+        return result
     }
 
     /**
      * Network and Database Functions for Champion Roles
      */
 
-    val roleList: LiveData<List<ChampionRoleRates>> = getTrueRoleList()
+    override val roleList: LiveData<List<ChampionRoleRates>> = getTrueRoleList()
 
-    suspend fun refreshChampionRates() {
-        withContext(Dispatchers.IO) {
-            val championRatesList = getChampionRatesAsync().await()
-            val trueChampionRolesList = calculateRole(championRatesList)
-            insertTrueRoleList(trueChampionRolesList)
+    override suspend fun refreshChampionRates(): String {
+        val result = getChampionRatesAsync()
+        return when (result) {
+            is Resource.Error -> {
+                result.error.toString()
+            }
+            is Resource.Loading -> {
+                "Unexpected Error"
+            }
+            is Resource.Success -> {
+                val data = result.data
+                return if(data != null) {
+                    val trueChampionRolesList = calculateRole(result.data)
+                    insertTrueRoleList(trueChampionRolesList)
+                    "Role List Success"
+                } else "Error"
+            }
+        }.exhaustive
+    }
+
+    override suspend fun getChampionRatesAsync(): Resource<ChampionRoles> {
+        val response = safeApiCall { api.getChampionRatesAsync(Constants.CHAMPION_RATES_URL) }
+        var result : Resource<ChampionRoles> = Resource.Loading(null)
+        response.onSuccess {
+           result = Resource.Success(it)
         }
+        response.onFailure {
+            result = Resource.Error(it, null)
+        }
+        return result
     }
 
-    private fun getChampionRatesAsync(): Deferred<ChampionRoles> {
-        return api.getChampionRatesAsync(Constants.CHAMPION_RATES_URL)
-    }
-
-    private suspend fun insertTrueRoleList(list: List<ChampionRoleRates>) {
+    override suspend fun insertTrueRoleList(list: List<ChampionRoleRates>) {
         championRoleRatesDao.insertList(list)
     }
 
-    private fun getTrueRoleList(): LiveData<List<ChampionRoleRates>> =
+    override fun getTrueRoleList(): LiveData<List<ChampionRoleRates>> =
         championRoleRatesDao.getList()
 
-    private suspend fun getChampRole(id: Int): ChampionRoleRates? =
+    override suspend fun getChampRole(id: Int): ChampionRoleRates? =
         championRoleRatesDao.getChampRole(id)
 
-
     //Determine what role a champion belongs too based on play rate on that lane
-    private fun calculateRole(champRates: ChampionRoles): List<ChampionRoleRates> {
+    override suspend fun calculateRole(champRates: ChampionRoles): List<ChampionRoleRates> {
         val champRoles = champRates.data
         val list = mutableListOf<ChampionRoleRates>()
 
 
-        for (i in Constants.champMap) {
+        for (i in champMap) {
 
             var bot = false
             var top = false
@@ -207,46 +247,48 @@ class Repository @Inject constructor(
      * Network and Database Functions for Champion Mastery
      */
 
-    suspend fun getChampion(champId: Int, summonerId: String): ChampionMastery {
+    override suspend fun getChampion(champId: Int, summonerId: String): ChampionMastery? {
         return championsDao.getChampion(champId, summonerId)
     }
 
-    suspend fun updateChampionRecentBoost(summonerId: String, champId: Int, boost: Int) {
+    override suspend fun updateChampionRecentBoost(summonerId: String, champId: Int, boost: Int) {
         championsDao.updateChampionRecentBoost(summonerId, champId, boost)
     }
 
-    suspend fun updateChampionExperienceBoost(summonerId: String, champId: Int, boost: Int) {
+    override suspend fun updateChampionExperienceBoost(
+        summonerId: String,
+        champId: Int,
+        boost: Int
+    ) {
         championsDao.updateChampionExperienceBoost(summonerId, champId, boost)
     }
 
-    suspend fun updateChampionRank(summonerId: String, champId: Int, lp: Int, rank: Constants.Ranks) {
+    override suspend fun updateChampionRank(
+        summonerId: String,
+        champId: Int,
+        lp: Int,
+        rank: Constants.Ranks
+    ) {
         championsDao.updateChampionRank(summonerId, champId, lp, rank.toString())
     }
 
-    sealed class ChampListState {
-        data class Ready(val splashName: String) : ChampListState()
-        object Empty : ChampListState()
-    }
-
-
-    suspend fun getHighestMasteryChampion(): ChampionMastery? {
+    override suspend fun getHighestMasteryChampion(): ChampionMastery? {
         val summoner = getCurrentSummoner()
-        return championsDao.getHighestMasteryChampion(summoner.id)
+        return championsDao.getHighestMasteryChampion(summoner?.id ?: "0")
     }
 
 
-    fun getHeaderInfo(
+    override fun getHeaderInfo(
         name: String,
         profileIconId: Double,
-        champion: Repository.ChampListState
+        champion: LeagueRepository.ChampListState
     ): Flow<HeaderItem> {
         return flow {
-
             val splashName = when (champion) {
-                is ChampListState.Ready -> {
+                is LeagueRepository.ChampListState.Ready -> {
                     champion.splashName
                 }
-                is ChampListState.Empty -> {
+                is LeagueRepository.ChampListState.Empty -> {
                     "Lux"
                 }
             }
@@ -261,15 +303,18 @@ class Repository @Inject constructor(
     }
 
 
-    private suspend fun getAllChampionMasteries(url: String): List<ChampionMastery> {
-        val list = api.getAllChampionMasteries(url)
-        for (champion in list) {
-            champion.champName = champMap[champion.championId.toInt()] ?: "Unknown"
-        }
-        return list
+    override suspend fun getAllChampionMasteries(url: String): List<ChampionMastery>? {
+        val response = api.getAllChampionMasteries(url)
+        return if(response.isSuccessful) {
+            val list = response.body()!!
+            for (champion in list) {
+                champion.champName = champMap[champion.championId] ?: "Unknown"
+            }
+            list
+        } else null
     }
 
-    fun getChampions(
+    override fun getChampions(
         searchQuery: String,
         sortOrder: SortOrder,
         showADC: Boolean,
@@ -286,7 +331,7 @@ class Repository @Inject constructor(
                 championsDao.getChampions(
                     searchQuery,
                     sortOrder,
-                    summoner.id,
+                    summoner?.id ?: "0",
                     showADC,
                     showSup,
                     showMid,
@@ -299,38 +344,42 @@ class Repository @Inject constructor(
         shouldFetch = {
             db.withTransaction {
                 val summoner = getCurrentSummoner()
-                it.isEmpty() || it == null || (championsDao.isFreshSummonerChampions(
-                    summoner.id,
-                    System.currentTimeMillis() - FRESH_TIMEOUT
-                ) == 0)
+                it.isEmpty() || it == null || (summoner?.let { it1 ->
+                    championsDao.isFreshSummonerChampions(
+                        it1.id,
+                        System.currentTimeMillis() - FRESH_TIMEOUT
+                    )
+                } == 0)
             }
         },
         fetch = {
             db.withTransaction {
                 val summoner = getCurrentSummoner()
-                val url = Constants.ALL_CHAMPION_MASTERIES + (summoner.id
-                    ?: "") + "?api_key=" + Constants.API_KEY
+                val url = Constants.ALL_CHAMPION_MASTERIES + (summoner?.id
+                        ) + "?api_key=" + BuildConfig.API_KEY
                 val championList = getAllChampionMasteries(url)
                 val mutableChampionList = mutableListOf<ChampionMastery>()
-                for (champion in championList) {
-                    val champRole = getChampRole(champion.championId) ?: ChampionRoleRates(
-                        0,
-                        TrueRoles(
-                            TOP = false,
-                            JUNGLE = false,
-                            MIDDLE = false,
-                            BOTTOM = false,
-                            UTILITY = false,
-                            ALL = true
+                if (championList != null) {
+                    for (champion in championList) {
+                        val champRole = getChampRole(champion.championId) ?: ChampionRoleRates(
+                            0,
+                            TrueRoles(
+                                TOP = false,
+                                JUNGLE = false,
+                                MIDDLE = false,
+                                BOTTOM = false,
+                                UTILITY = false,
+                                ALL = true
+                            )
                         )
-                    )
-                    mutableChampionList.add(
-                        champion.copy(
-                            roles = champRole.roles,
-                            timeReceived = System.currentTimeMillis(),
-                            rankInfo = ChampRankInfo()
+                        mutableChampionList.add(
+                            champion.copy(
+                                roles = champRole.roles,
+                                timeReceived = System.currentTimeMillis(),
+                                rankInfo = ChampRankInfo()
+                            )
                         )
-                    )
+                    }
                 }
                 mutableChampionList
             }
@@ -343,40 +392,35 @@ class Repository @Inject constructor(
 
     )
 
-    companion object {
-        val FRESH_TIMEOUT = TimeUnit.DAYS.toMillis(1)
-    }
-
-
     /**
      * Network and database functions relating to League Matches
      */
 
-    suspend fun matchListForInitBoost(): Resource<List<String>?> {
+    override suspend fun matchListForInitBoost(): Resource<List<String>?> {
         val summoner = getCurrentSummoner()
-        if(!summoner.initBoostCalculated) {
-            val url =
-                Constants.MATCH_LIST + summoner.puuid + "/ids?start=0&count=15&api_key=" + Constants.API_KEY
+        if (summoner != null) {
+            if (!summoner.initBoostCalculated) {
+                val url =
+                    Constants.MATCH_LIST + summoner.puuid + "/ids?start=0&count=15&api_key=" + BuildConfig.API_KEY
 
-            val response = api.getMatchListAsync(url)
-            return try {
-                Resource.Success(response.await())
-            } catch (e: Exception) {
-                Resource.Error(e,null)
+                val response = api.getMatchListAsync(url)
+                return if(response.isSuccessful) {
+                    Resource.Success(response.body())
+                } else {
+                    Resource.Error(Exception(response.errorBody().toString()), null)
+                }
             }
         }
         return Resource.Success(null)
     }
 
-
-
-    suspend fun getMatchDetails(matchId: String): Resource<MatchDetails> {
-        val url = Constants.MATCH_DETAIL_URL + matchId + "?api_key=" + Constants.API_KEY
+    override suspend fun getMatchDetails(matchId: String): Resource<MatchDetails> {
+        val url = Constants.MATCH_DETAIL_URL + matchId + "?api_key=" + BuildConfig.API_KEY
         val response = api.getMatchDetailsAsync(url)
-        return try {
-            Resource.Success(response.await())
-        } catch (e: java.lang.Exception) {
-            Resource.Error(e, null)
+        return if(response.isSuccessful) {
+            Resource.Success(response.body()!!)
+        } else{
+            Resource.Error(Exception(response.errorBody().toString()), null)
         }
     }
 }

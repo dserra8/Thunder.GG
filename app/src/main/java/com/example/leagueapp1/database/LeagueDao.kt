@@ -13,17 +13,14 @@ interface SummonersDao {
     @Update
     suspend fun update(summoner: SummonerProperties)
 
-    @Query("SELECT * FROM summoners WHERE current=:current")
-    fun getSummonerFlow(current: Boolean): Flow<SummonerProperties?>
+    @Query("SELECT * FROM summoners WHERE current=1")
+    fun getSummonerFlow(): Flow<SummonerProperties?>
 
     @Query("SELECT * FROM summoners WHERE current=1")
-    suspend fun getSummoner(): SummonerProperties
+    suspend fun getSummoner(): SummonerProperties?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSummoner(summoner: SummonerProperties)
-
-    @Update
-    suspend fun replaceSummoner(summoner: SummonerProperties)
 
     @Query("DELETE FROM summoners")
     suspend fun deleteAllSummoners()
@@ -106,15 +103,8 @@ interface ChampionsDao {
     @Query( "UPDATE summonerChampions SET lp=:lp, rank=:rank WHERE summonerId=:summonerId AND championId=:champId")
     suspend fun updateChampionRank(summonerId: String, champId: Int, lp: Int, rank: String)
 
-    @Update
-    suspend fun updateChampion(champion: ChampionMastery)
-
     @Query("SELECT * FROM summonerChampions WHERE summonerId=:summonerId AND championId=:champId")
-    suspend fun getChampion(champId: Int, summonerId: String): ChampionMastery
-
-    @Query("SELECT * FROM summonerChampions WHERE summonerId=:summonerId AND championId=:champId")
-    fun getChampionFlow(champId: Int, summonerId: String): Flow<ChampionMastery>
-
+    suspend fun getChampion(champId: Int, summonerId: String): ChampionMastery?
 }
 
 @Dao

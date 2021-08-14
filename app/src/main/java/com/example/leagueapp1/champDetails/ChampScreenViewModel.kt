@@ -3,6 +3,7 @@ package com.example.leagueapp1.champDetails
 import androidx.lifecycle.*
 import com.example.leagueapp1.champListRecyclerView.ChampItem
 import com.example.leagueapp1.database.ChampionMastery
+import com.example.leagueapp1.repository.LeagueRepository
 import com.example.leagueapp1.repository.Repository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -12,7 +13,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ChampScreenViewModel @Inject constructor(
-    private val repository: Repository,
+    private val repository: LeagueRepository,
     private val state: SavedStateHandle
 ) : ViewModel() {
 
@@ -32,9 +33,9 @@ class ChampScreenViewModel @Inject constructor(
     val champScreenEvents = champScreenEventsChannel.receiveAsFlow()
 
     fun summonerReady(championId: Int) = viewModelScope.launch {
-        val test = champItem?.id
         val champ = repository.getChampion(summonerId = summonerFlow.value?.id!!, champId = championId)
-        champScreenEventsChannel.send(ChampScreenEvents.ChampReady(champ))
+        if(champ != null)
+            champScreenEventsChannel.send(ChampScreenEvents.ChampReady(champ))
     }
 
     fun updateLpText(lp: Int) {

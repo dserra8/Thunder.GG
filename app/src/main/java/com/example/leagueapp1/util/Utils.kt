@@ -38,8 +38,8 @@ fun formatSplashName(id: Int): String {
         filterChampionName(Constants.champMap[id])
     var splashName = filterPair.first
     if (filterPair.second) {
-        splashName = splashName.toLowerCase(Locale.ROOT)
-        splashName = splashName.capitalize(Locale.ROOT)
+        splashName = splashName.lowercase(Locale.ROOT)
+        splashName = splashName.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
     }
     return when (splashName) {
         "Nunuwillump" -> "Nunu"

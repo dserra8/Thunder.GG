@@ -12,9 +12,9 @@ data class RankDetails(
 )
 
 data class MatchDetails(
-    val metadata: MetaData,
+    val metadata: MetaData?,
     val info: Info,
-    val status: Status
+    val status: Status?
 )
 
 data class MetaData(
@@ -387,12 +387,12 @@ data class Data(
 //)
 data class MatchList(
     val id: String,
-    val status: Status
+    val status: Status?
 )
 
 
 data class ErrorResponse(
-    val status: Status
+    val status: Status?
 )
 
 data class Status(

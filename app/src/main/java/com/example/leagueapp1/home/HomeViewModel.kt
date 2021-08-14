@@ -4,9 +4,8 @@ package com.example.leagueapp1.home
 import androidx.lifecycle.*
 import com.example.leagueapp1.database.SummonerProperties
 import com.example.leagueapp1.network.ErrorResponse
+import com.example.leagueapp1.repository.LeagueRepository
 import com.example.leagueapp1.repository.Repository
-import com.example.leagueapp1.util.Constants.API_KEY
-import com.example.leagueapp1.util.Constants.SUMMONER_INFO
 import com.example.leagueapp1.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -18,11 +17,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class HomeViewModel @Inject constructor(private val repository: Repository) : ViewModel() {
-
-    //coroutine variables
-    private var viewModelJob = Job()
-    private val coroutineScope = CoroutineScope(viewModelJob + Dispatchers.Main)
+class HomeViewModel @Inject constructor(private val repository: LeagueRepository) : ViewModel() {
 
     //Live Data for getSummonerId call
     private val _summonerProperties = MutableLiveData<Resource<SummonerProperties>>()
@@ -37,8 +32,8 @@ class HomeViewModel @Inject constructor(private val repository: Repository) : Vi
     private var _summonerName = ""
     private var roleListReady: Boolean = false
     private var updatesDone: Boolean = false
+    private var roleListFailed: Boolean = false
     private var submitClicked: Boolean = false
-    private var summonerFound: Boolean = false
 
 
     private val homeEventChannel = Channel<HomeEvents>()
@@ -103,18 +98,29 @@ class HomeViewModel @Inject constructor(private val repository: Repository) : Vi
      */
     fun refreshRoleList() {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.refreshChampionRates()
-            onGetRoleListEvent()
+            when (val result = repository.refreshChampionRates()) {
+                "Role List Success" -> {
+                    onGetRoleListEvent()
+                }
+                else -> {
+                    roleListFailed = true
+                    homeEventChannel.send(HomeEvents.RoleListFailed(result))
+                }
+            }
         }
     }
 
-    fun onGetRoleListEvent() = viewModelScope.launch {
+    fun onGetRoleListEvent() = viewModelScope.launch{
         roleListReady = true
         homeEventChannel.send(HomeEvents.RoleListReady)
     }
 
     fun roleListAndUpdatesReady() {
-        if (roleListReady && updatesDone) {
+        if(updatesDone && roleListFailed) {
+            roleListFailed = false
+            refreshRoleList()
+        }
+        else if (roleListReady && updatesDone) {
             viewModelScope.launch {
                 roleListReady = false
                 updatesDone = false
@@ -139,5 +145,6 @@ class HomeViewModel @Inject constructor(private val repository: Repository) : Vi
         data class SummonerNotFound(val error: Throwable) : HomeEvents()
         object SubmitClicked : HomeEvents()
         object RoleListReady : HomeEvents()
+        data class RoleListFailed(val errorMessage: String): HomeEvents()
     }
 }

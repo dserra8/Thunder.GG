@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.leagueapp1.home.HomeViewModel
 import com.example.leagueapp1.network.ApplicationScope
+import com.example.leagueapp1.repository.LeagueRepository
 import com.example.leagueapp1.repository.Repository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -14,7 +15,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val repository: Repository,
+    private val repository: LeagueRepository,
     @ApplicationScope private val applicationScope: CoroutineScope
 ) :  ViewModel() {
 

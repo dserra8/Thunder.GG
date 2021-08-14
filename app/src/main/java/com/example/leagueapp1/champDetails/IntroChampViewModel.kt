@@ -4,7 +4,7 @@ import androidx.lifecycle.*
 import com.example.leagueapp1.R
 import com.example.leagueapp1.champListRecyclerView.ChampItem
 import com.example.leagueapp1.network.MatchDetails
-import com.example.leagueapp1.repository.Repository
+import com.example.leagueapp1.repository.LeagueRepository
 import com.example.leagueapp1.util.Constants
 import com.example.leagueapp1.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,7 +17,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class IntroChampViewModel @Inject constructor(
-    val repository: Repository
+    val repository: LeagueRepository
 ) : ViewModel(){
 
     val summonerFlow = repository.summoner.asLiveData()
@@ -125,7 +125,7 @@ class IntroChampViewModel @Inject constructor(
     }
 
     private fun calculateExperienceBoost(introChamp: ChampItem): Int {
-        if(introChamp.masteryPoints ?: 0 > 20000){
+        if(introChamp.masteryPoints > 20000){
             return when(summonerFlow.value?.rank){
                 "IRON" -> 0
                 "BRONZE" -> 0
@@ -144,7 +144,7 @@ class IntroChampViewModel @Inject constructor(
 
     fun recentBoostReady(introChamp: ChampItem) = viewModelScope.launch {
         val champion = repository.getChampion(champId = introChamp.id, summonerId = summonerFlow.value?.id!!)
-        val experienceBoost = if (champion.rankInfo?.experienceBoost == null) {
+        val experienceBoost = if (champion?.rankInfo?.experienceBoost == null) {
             val boost = calculateExperienceBoost(introChamp)
             repository.updateChampionExperienceBoost(
                 summonerId = summonerFlow.value?.id!!,
@@ -155,7 +155,7 @@ class IntroChampViewModel @Inject constructor(
         } else {
             champion.rankInfo.experienceBoost
         }
-        introChampEventsChannel.send(IntroChampEvents.InitBoostReady((champion.rankInfo?.recentBoost
+        introChampEventsChannel.send(IntroChampEvents.InitBoostReady((champion?.rankInfo?.recentBoost
             ?: 0) + experienceBoost))
     }
 
