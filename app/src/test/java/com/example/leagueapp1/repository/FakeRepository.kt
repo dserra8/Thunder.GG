@@ -7,61 +7,107 @@ import com.example.leagueapp1.champListRecyclerView.HeaderItem
 import com.example.leagueapp1.database.*
 import com.example.leagueapp1.network.*
 import com.example.leagueapp1.repository.LeagueRepository.Companion.FRESH_TIMEOUT
-import com.example.leagueapp1.util.Constants
-import com.example.leagueapp1.util.Resource
-import com.example.leagueapp1.util.exhaustive
-import com.example.leagueapp1.util.networkBoundResource
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Deferred
+import com.example.leagueapp1.util.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.ResponseBody.Companion.toResponseBody
 import retrofit2.Response
+import javax.inject.Inject
 
-class FakeRepository : LeagueRepository {
+class FakeRepository @Inject constructor(
+    private val dispatchers: DispatcherProvider
+) : LeagueRepository {
     private val championList = mutableListOf<ChampionMastery>()
     private val summonerList = mutableListOf<SummonerProperties>()
     private val championRoleList = mutableListOf<ChampionRoleRates>()
 
-    private val observableChampionRoleList =
+    private val serverSummonerList =
+        listOf("Chasik", "Kirokato", "itsjerez", "ChiTownsFinest", "MysticsJL")
+
+    private val _observableChampionRoleList =
         MutableLiveData<List<ChampionRoleRates>>(championRoleList)
+    val observableChampionRoleList: LiveData<List<ChampionRoleRates>> = _observableChampionRoleList
+
 
     private var id: Int = 0
 
+    var refreshChampionRatesCalled = false
+
     //   private val championListFlow = Flow<List<SummonerProperties>>
-    private var shouldReturnNetworkError = true
+    private var shouldReturnNetworkError = false
 
     fun setShouldReturnNetworkError(value: Boolean) {
         shouldReturnNetworkError = value
     }
 
+    /**
+     * Function to make safe api calls and returns a kotlin Result.
+     */
+    private suspend inline fun <T> safeApiCall(crossinline responseFunc: suspend () -> Response<T>): Result<T> {
+
+        val response: Response<T>
+        try {
+            response = withContext(dispatchers.io) {
+                responseFunc.invoke()
+            }
+        } catch (e: Exception) {
+            return Result.failure(e)
+        }
+
+        if (!response.isSuccessful) {
+            return Result.failure(Exception(response.errorBody().toString()))
+        } else {
+            if (response.body() == null) {
+                return Result.failure(Exception("Unknown Error"))
+            }
+        }
+
+        return Result.success(response.body()!!)
+    }
+
+
+    /**
+     * Summoner Functions
+     */
+
     override val summoner: Flow<SummonerProperties?> = getSummonerFlow()
 
     override suspend fun getSummonerPropertiesAsync(url: String): Response<SummonerProperties> {
         return if (shouldReturnNetworkError) {
-            Response.error(404, "{\"key\":[\"somestuff\"]}"
-                .toResponseBody("application/json".toMediaTypeOrNull())
+            Response.error(
+                404, "{\"key\":[\"somestuff\"]}"
+                    .toResponseBody("application/json".toMediaTypeOrNull())
             )
         } else {
-            val name = url.substring(0, 65).substringBefore("?")
-            val summoner = SummonerProperties(
-                id = id.toString(),
-                accountId = id.toString(),
-                puuid = id.toString(),
-                name = name,
-                profileIconId = 0.0,
-                revisionDate = 0.0,
-                summonerLevel = 10.0,
-                current = false,
-                timeReceived = 0,
-                initBoostCalculated = false,
-                rank = null,
-                status = null
-            )
-            id++
-           Response.success(summoner)
+            val name = url.substringBefore("?").substringAfterLast("/")
+            var response: Response<SummonerProperties>
+            if (serverSummonerList.contains(name)) {
+                val summoner = SummonerProperties(
+                    id = id.toString(),
+                    accountId = id.toString(),
+                    puuid = id.toString(),
+                    name = name,
+                    profileIconId = 0.0,
+                    revisionDate = 0.0,
+                    summonerLevel = 10.0,
+                    current = false,
+                    timeReceived = 0,
+                    initBoostCalculated = false,
+                    rank = null,
+                    status = null
+                )
+                id++
+                response = Response.success(summoner)
+            } else {
+                response = Response.error(
+                    404, "{\"key\":[\"notInDatabase\"]}"
+                        .toResponseBody("application/json".toMediaTypeOrNull())
+                )
+            }
+            response
         }
     }
 
@@ -151,34 +197,38 @@ class FakeRepository : LeagueRepository {
         val isFreshSummoner = checkSummonerFreshness(summonerName)
         if (!isFreshSummoner) {
             val response =
-                getSummonerPropertiesAsync("${Constants.SUMMONER_INFO}$summonerName?api_key=${BuildConfig.API_KEY}")
-            return if (response.isSuccessful) {
-                val summoner = response.body()
-                if (summoner != null) {
-                    val rankList = getSummonerSoloRank(summoner.id)
-                    var rank: String? = null
-                    if (rankList != null && rankList.isNotEmpty()) {
-                        for (obj in rankList) {
-                            when (obj.queueType) {
-                                "RANKED_SOLO_5x5" -> {
-                                    rank = obj.tier
-                                    break
-                                }
-                                else -> {
-                                    break
+                safeApiCall { getSummonerPropertiesAsync("${Constants.SUMMONER_INFO}$summonerName?api_key=${BuildConfig.API_KEY}") }
+            response.onSuccess { summoner ->
+                val rankListResponse = getSummonerSoloRank(summoner.id)
+                var rank: String? = null
+                when (rankListResponse) {
+                    is Resource.Error -> {
+                        return Exception(rankListResponse.error)
+                    }
+                    is Resource.Loading -> {
+                        return Exception("Error while loading Summoner rank list")
+                    }
+                    is Resource.Success -> {
+                        val rankList = rankListResponse.data!!
+                        if (rankList.isNotEmpty()) {
+                            for (obj in rankList) {
+                                when (obj.queueType) {
+                                    "RANKED_SOLO_5x5" -> {
+                                        rank = obj.tier
+                                        break
+                                    }
                                 }
                             }
                         }
+                        val updatedSummoner =
+                            summoner.copy(timeReceived = System.currentTimeMillis(), rank = rank)
+                        insertSummoner(updatedSummoner)
+                        return null
                     }
-                    val updatedSummoner =
-                        summoner.copy(timeReceived = System.currentTimeMillis(), rank = rank)
-                    insertSummoner(updatedSummoner)
-                    return null
                 }
-                Exception("Summoner Not Found")
             }
-            else{
-                Exception("Summoner Not Found")
+            response.onFailure {
+                return Exception("Summoner Not Found")
             }
         }
         return null
@@ -192,19 +242,24 @@ class FakeRepository : LeagueRepository {
         }
     }
 
-    override suspend fun getSummonerSoloRank(summonerId: String): List<RankDetails>? {
-        val response =
-            getSummonerRankAsync()
-        return try {
-            response.await()
-        } catch (e: Exception) {
-            null
+    override suspend fun getSummonerSoloRank(summonerId: String): Resource<List<RankDetails>?> {
+        val response = safeApiCall { getSummonerRankAsync() }
+        var result: Resource<List<RankDetails>?> = Resource.Loading()
+        response.onSuccess {
+            result = Resource.Success(it)
         }
+        response.onFailure {
+            result = Resource.Error(it)
+        }
+        return result
     }
 
-    private fun getSummonerRankAsync(): Deferred<List<RankDetails>> {
+    private fun getSummonerRankAsync(): Response<List<RankDetails>> {
         return if (shouldReturnNetworkError) {
-            CompletableDeferred(null)
+            Response.error(
+                404, "{\"key\":[\"somestuff\"]}"
+                    .toResponseBody("application/json".toMediaTypeOrNull())
+            )
         } else {
             val rank1 = RankDetails(
                 queueType = "RANKED_SOLO_5X5",
@@ -225,13 +280,14 @@ class FakeRepository : LeagueRepository {
                 losses = 20
             )
             val rankList = listOf(rank1, rank2)
-            CompletableDeferred(rankList)
+            Response.success(rankList)
         }
     }
 
     override val roleList: LiveData<List<ChampionRoleRates>> = getTrueRoleList()
 
     override suspend fun refreshChampionRates(): String {
+        refreshChampionRatesCalled = true
         val result = getChampionRatesAsync()
         return when (result) {
             is Resource.Error -> {
@@ -249,1106 +305,197 @@ class FakeRepository : LeagueRepository {
     }
 
     override suspend fun getChampionRatesAsync(): Resource<ChampionRoles> {
-        val response = getChampionRatesMockAsync()
-        return try {
-            Resource.Success(response.await())
-        } catch (e: Exception) {
-            Resource.Error(e, null)
+        val response = safeApiCall { getChampionRatesMockAsync() }
+        var result: Resource<ChampionRoles> = Resource.Loading(null)
+        response.onSuccess {
+            result = Resource.Success(it)
         }
+        response.onFailure {
+            result = Resource.Error(it, null)
+        }
+        return result
     }
 
-    private fun getChampionRatesMockAsync(): Deferred<ChampionRoles> {
+    private fun createChampionRates(
+        UTILITY: Rate = Rate(1.2),
+        JUNGLE: Rate = Rate(0.1),
+        BOTTOM: Rate = Rate(0.2),
+        MIDDLE: Rate = Rate(0.7),
+        TOP: Rate = Rate(0.2)
+    ) = ChampionRates(
+        UTILITY = UTILITY,
+        JUNGLE = JUNGLE,
+        BOTTOM = BOTTOM,
+        MIDDLE = MIDDLE,
+        TOP = TOP
+    )
+
+
+    private fun getChampionRatesMockAsync(): Response<ChampionRoles> {
         return if (shouldReturnNetworkError) {
-            CompletableDeferred(null)
+            Response.error(
+                404, "{\"key\":[\"somestuff\"]}"
+                    .toResponseBody("application/json".toMediaTypeOrNull())
+            )
         } else {
             val data = Data(
-                `1` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `10` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `101` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `102` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `103` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `104` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `105` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `106` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `107` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `11` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `110` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `111` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `112` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `113` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `114` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `115` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `117` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `119` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `12` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `120` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `121` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `122` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `126` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `127` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `13` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `131` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `133` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `134` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `136` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `14` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `141` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `142` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `143` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `145` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `147` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `15` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `150` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `154` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `157` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `16` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `161` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `163` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `164` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `17` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `18` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `19` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `2` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `20` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `201` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `202` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `203` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `21` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `22` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `222` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `223` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `23` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `234` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `235` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `236` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `238` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `24` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `240` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `245` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `246` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `25` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `254` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `26` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `266` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `267` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `268` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `27` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `28` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `29` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `3` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `30` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `31` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `32` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `33` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `34` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `35` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `350` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `36` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `360` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `37` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `38` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `39` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `4` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `40` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `41` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `412` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `42` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `420` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `421` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `427` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `429` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `43` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `432` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `44` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `45` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `48` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `497` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `498` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `5` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `50` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `51` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `516` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `517` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `518` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `523` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `526` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `53` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `54` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `55` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `555` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `56` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `57` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `58` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `59` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `6` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `60` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `61` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `62` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `63` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `64` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `67` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `68` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `69` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `7` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `72` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `74` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `75` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `76` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `77` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `777` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `78` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `79` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `8` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `80` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `81` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `82` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `83` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `84` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `85` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `86` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `875` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `876` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `887` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `89` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `9` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `90` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `91` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `92` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `96` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `98` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                ),
-                `99` = ChampionRates(
-                    UTILITY = Rate(1.2),
-                    JUNGLE = Rate(0.1),
-                    BOTTOM = Rate(0.2),
-                    MIDDLE = Rate(0.7),
-                    TOP = Rate(0.2)
-                )
+                `1` = createChampionRates(),
+                `10` = createChampionRates(),
+                `101` = createChampionRates(),
+                `102` = createChampionRates(),
+                `103` = createChampionRates(),
+                `104` = createChampionRates(),
+                `105` = createChampionRates(),
+                `106` = createChampionRates(),
+                `107` = createChampionRates(),
+                `11` = createChampionRates(),
+                `110` = createChampionRates(),
+                `111` = createChampionRates(),
+                `112` = createChampionRates(),
+                `113` = createChampionRates(),
+                `114` = createChampionRates(),
+                `115` = createChampionRates(),
+                `117` = createChampionRates(),
+                `119` = createChampionRates(),
+                `12` = createChampionRates(),
+                `120` = createChampionRates(),
+                `121` = createChampionRates(),
+                `122` = createChampionRates(),
+                `126` = createChampionRates(),
+                `127` = createChampionRates(),
+                `13` = createChampionRates(),
+                `131` = createChampionRates(),
+                `133` = createChampionRates(),
+                `134` = createChampionRates(),
+                `136` = createChampionRates(),
+                `14` = createChampionRates(),
+                `141` = createChampionRates(),
+                `142` = createChampionRates(),
+                `143` = createChampionRates(),
+                `145` = createChampionRates(),
+                `147` = createChampionRates(),
+                `15` = createChampionRates(),
+                `150` = createChampionRates(),
+                `154` = createChampionRates(),
+                `157` = createChampionRates(),
+                `16` = createChampionRates(),
+                `161` = createChampionRates(),
+                `163` = createChampionRates(),
+                `164` = createChampionRates(),
+                `17` = createChampionRates(),
+                `18` = createChampionRates(),
+                `19` = createChampionRates(),
+                `2` = createChampionRates(),
+                `20` = createChampionRates(),
+                `201` = createChampionRates(),
+                `202` = createChampionRates(),
+                `203` = createChampionRates(),
+                `21` = createChampionRates(),
+                `22` = createChampionRates(),
+                `222` = createChampionRates(),
+                `223` = createChampionRates(),
+                `23` = createChampionRates(),
+                `234` = createChampionRates(),
+                `235` = createChampionRates(),
+                `236` = createChampionRates(),
+                `238` = createChampionRates(),
+                `24` = createChampionRates(),
+                `240` = createChampionRates(),
+                `245` = createChampionRates(),
+                `246` = createChampionRates(),
+                `25` = createChampionRates(),
+                `254` = createChampionRates(),
+                `26` = createChampionRates(),
+                `266` = createChampionRates(),
+                `267` = createChampionRates(),
+                `268` = createChampionRates(),
+                `27` = createChampionRates(),
+                `28` = createChampionRates(),
+                `29` = createChampionRates(),
+                `3` = createChampionRates(),
+                `30` = createChampionRates(),
+                `31` = createChampionRates(),
+                `32` = createChampionRates(),
+                `33` = createChampionRates(),
+                `34` = createChampionRates(),
+                `35` = createChampionRates(),
+                `350` = createChampionRates(),
+                `36` = createChampionRates(),
+                `360` = createChampionRates(),
+                `37` = createChampionRates(),
+                `38` = createChampionRates(),
+                `39` = createChampionRates(),
+                `4` = createChampionRates(),
+                `40` = createChampionRates(),
+                `41` = createChampionRates(),
+                `412` = createChampionRates(),
+                `42` = createChampionRates(),
+                `420` = createChampionRates(),
+                `421` = createChampionRates(),
+                `427` = createChampionRates(),
+                `429` = createChampionRates(),
+                `43` = createChampionRates(),
+                `432` = createChampionRates(),
+                `44` = createChampionRates(),
+                `45` = createChampionRates(),
+                `48` = createChampionRates(),
+                `497` = createChampionRates(),
+                `498` = createChampionRates(),
+                `5` = createChampionRates(),
+                `50` = createChampionRates(),
+                `51` = createChampionRates(),
+                `516` = createChampionRates(),
+                `517` = createChampionRates(),
+                `518` = createChampionRates(),
+                `523` = createChampionRates(),
+                `526` = createChampionRates(),
+                `53` = createChampionRates(),
+                `54` = createChampionRates(),
+                `55` = createChampionRates(),
+                `555` = createChampionRates(),
+                `56` = createChampionRates(),
+                `57` = createChampionRates(),
+                `58` = createChampionRates(),
+                `59` = createChampionRates(),
+                `6` = createChampionRates(),
+                `60` = createChampionRates(),
+                `61` = createChampionRates(),
+                `62` = createChampionRates(),
+                `63` = createChampionRates(),
+                `64` = createChampionRates(),
+                `67` = createChampionRates(),
+                `68` = createChampionRates(),
+                `69` = createChampionRates(),
+                `7` = createChampionRates(),
+                `72` = createChampionRates(),
+                `74` = createChampionRates(),
+                `75` = createChampionRates(),
+                `76` = createChampionRates(),
+                `77` = createChampionRates(),
+                `777` = createChampionRates(),
+                `78` = createChampionRates(),
+                `79` = createChampionRates(),
+                `8` = createChampionRates(),
+                `80` = createChampionRates(),
+                `81` = createChampionRates(),
+                `82` = createChampionRates(),
+                `83` = createChampionRates(),
+                `84` = createChampionRates(),
+                `85` = createChampionRates(),
+                `86` = createChampionRates(),
+                `875` = createChampionRates(),
+                `876` = createChampionRates(),
+                `887` = createChampionRates(),
+                `89` = createChampionRates(),
+                `9` = createChampionRates(),
+                `90` = createChampionRates(),
+                `91` = createChampionRates(),
+                `92` = createChampionRates(),
+                `96` = createChampionRates(),
+                `98` = createChampionRates(),
+                `99` = createChampionRates()
             )
-            CompletableDeferred(ChampionRoles(data, patch = "12.5"))
+            Response.success(ChampionRoles(data, patch = "12.5"))
         }
     }
 
@@ -1360,12 +507,12 @@ class FakeRepository : LeagueRepository {
     }
 
     private fun refreshLiveData() {
-        observableChampionRoleList.postValue(championRoleList)
+        _observableChampionRoleList.postValue(championRoleList)
     }
 
 
     override fun getTrueRoleList(): LiveData<List<ChampionRoleRates>> {
-        return observableChampionRoleList
+        return _observableChampionRoleList
     }
 
     override suspend fun getChampRole(id: Int): ChampionRoleRates? {
@@ -1502,82 +649,96 @@ class FakeRepository : LeagueRepository {
         }
     }
 
-    override suspend fun getAllChampionMasteries(url: String): List<ChampionMastery> {
-        val list = getAllChampionMasteriesMockAsync()
-        for (champion in list) {
-            champion.champName = Constants.champMap[champion.championId] ?: "Unknown"
+    override suspend fun getAllChampionMasteries(url: String): Resource<List<ChampionMastery>?> {
+        val response = safeApiCall { getAllChampionMasteriesMockAsync() }
+        var result: Resource<List<ChampionMastery>?> = Resource.Loading(null)
+        response.onSuccess { list ->
+            for (champion in list) {
+                champion.champName = Constants.champMap[champion.championId] ?: "Unknown"
+            }
+            result = Resource.Success(list)
         }
-        return list
+        response.onFailure {
+            result = Resource.Error(it, null)
+        }
+        return result
     }
 
-    private fun getAllChampionMasteriesMockAsync(): List<ChampionMastery> {
-        val champion1 = ChampionMastery(
-            championId = 1,
-            championLevel = 1.0,
-            championPoints = 200.0,
-            lastPlayTime = 1000.0,
-            championPointsSinceLastLevel = 10.0,
-            championPointsUntilNextLevel = 100.0,
-            chestGranted = false,
-            tokensEarned = 10.0,
-            summonerId = "123",
-            champName = "Lux",
-            timeReceived = 10000,
-            rankInfo = null,
-            roles = TrueRoles(
-                TOP = false,
-                JUNGLE = false,
-                MIDDLE = true,
-                BOTTOM = false,
-                UTILITY = true
+    private fun getAllChampionMasteriesMockAsync(): Response<List<ChampionMastery>> {
+        return if (shouldReturnNetworkError) {
+            Response.error(
+                404, "{\"key\":[\"somestuff\"]}"
+                    .toResponseBody("application/json".toMediaTypeOrNull())
             )
-        )
-        val champion2 = ChampionMastery(
-            championId = 2,
-            championLevel = 1.0,
-            championPoints = 300.0,
-            lastPlayTime = 1000.0,
-            championPointsSinceLastLevel = 10.0,
-            championPointsUntilNextLevel = 100.0,
-            chestGranted = false,
-            tokensEarned = 10.0,
-            summonerId = "123",
-            champName = "Abs",
-            timeReceived = 10000,
-            rankInfo = null,
-            roles = null
-        )
-        val champion3 = ChampionMastery(
-            championId = 3,
-            championLevel = 1.0,
-            championPoints = 400.0,
-            lastPlayTime = 1000.0,
-            championPointsSinceLastLevel = 10.0,
-            championPointsUntilNextLevel = 100.0,
-            chestGranted = false,
-            tokensEarned = 10.0,
-            summonerId = "123",
-            champName = "Darius",
-            timeReceived = 10000,
-            rankInfo = null,
-            roles = null
-        )
-        val champion4 = ChampionMastery(
-            championId = 4,
-            championLevel = 1.0,
-            championPoints = 500.0,
-            lastPlayTime = 1000.0,
-            championPointsSinceLastLevel = 10.0,
-            championPointsUntilNextLevel = 100.0,
-            chestGranted = false,
-            tokensEarned = 10.0,
-            summonerId = "123",
-            champName = "Zion",
-            timeReceived = 10000,
-            rankInfo = null,
-            roles = null
-        )
-        return listOf(champion1, champion2, champion3, champion4)
+        } else {
+            val champion1 = ChampionMastery(
+                championId = 1,
+                championLevel = 1.0,
+                championPoints = 200.0,
+                lastPlayTime = 1000.0,
+                championPointsSinceLastLevel = 10.0,
+                championPointsUntilNextLevel = 100.0,
+                chestGranted = false,
+                tokensEarned = 10.0,
+                summonerId = "123",
+                champName = "Lux",
+                timeReceived = 10000,
+                rankInfo = null,
+                roles = TrueRoles(
+                    TOP = false,
+                    JUNGLE = false,
+                    MIDDLE = true,
+                    BOTTOM = false,
+                    UTILITY = true
+                )
+            )
+            val champion2 = ChampionMastery(
+                championId = 2,
+                championLevel = 1.0,
+                championPoints = 300.0,
+                lastPlayTime = 1000.0,
+                championPointsSinceLastLevel = 10.0,
+                championPointsUntilNextLevel = 100.0,
+                chestGranted = false,
+                tokensEarned = 10.0,
+                summonerId = "123",
+                champName = "Abs",
+                timeReceived = 10000,
+                rankInfo = null,
+                roles = null
+            )
+            val champion3 = ChampionMastery(
+                championId = 3,
+                championLevel = 1.0,
+                championPoints = 400.0,
+                lastPlayTime = 1000.0,
+                championPointsSinceLastLevel = 10.0,
+                championPointsUntilNextLevel = 100.0,
+                chestGranted = false,
+                tokensEarned = 10.0,
+                summonerId = "123",
+                champName = "Darius",
+                timeReceived = 10000,
+                rankInfo = null,
+                roles = null
+            )
+            val champion4 = ChampionMastery(
+                championId = 4,
+                championLevel = 1.0,
+                championPoints = 500.0,
+                lastPlayTime = 1000.0,
+                championPointsSinceLastLevel = 10.0,
+                championPointsUntilNextLevel = 100.0,
+                chestGranted = false,
+                tokensEarned = 10.0,
+                summonerId = "123",
+                champName = "Zion",
+                timeReceived = 10000,
+                rankInfo = null,
+                roles = null
+            )
+            Response.success(listOf(champion1, champion2, champion3, champion4))
+        }
     }
 
     private fun getChampionsMock(
@@ -1628,10 +789,11 @@ class FakeRepository : LeagueRepository {
         championList.sortBy { it.champName }
         for (champ in championList) {
             if (((champ.roles?.BOTTOM == showADC && showADC) || (champ.roles?.UTILITY == showSup && showSup)
-                || (champ.roles?.MIDDLE == showMid && showMid) || (champ.roles?.JUNGLE == showJungle && showJungle)
-                || (champ.roles?.TOP == showTop && showTop) || (champ.roles?.ALL == showAll && showAll)
-            ) && id == champ.summonerId) {
-                if(champ.champName.startsWith(query)){
+                        || (champ.roles?.MIDDLE == showMid && showMid) || (champ.roles?.JUNGLE == showJungle && showJungle)
+                        || (champ.roles?.TOP == showTop && showTop) || (champ.roles?.ALL == showAll && showAll)
+                        ) && id == champ.summonerId
+            ) {
+                if (champ.champName.startsWith(query)) {
                     newChampList.add(champ)
                 }
             }
@@ -1654,10 +816,11 @@ class FakeRepository : LeagueRepository {
         championList.sortByDescending { it.championPoints }
         for (champ in championList) {
             if (((champ.roles?.BOTTOM == showADC && showADC) || (champ.roles?.UTILITY == showSup && showSup)
-                || (champ.roles?.MIDDLE == showMid && showMid) || (champ.roles?.JUNGLE == showJungle && showJungle)
-                || (champ.roles?.TOP == showTop && showTop) || (champ.roles?.ALL == showAll && showAll)
-            ) && id == champ.summonerId) {
-                if(champ.champName.startsWith(query)){
+                        || (champ.roles?.MIDDLE == showMid && showMid) || (champ.roles?.JUNGLE == showJungle && showJungle)
+                        || (champ.roles?.TOP == showTop && showTop) || (champ.roles?.ALL == showAll && showAll)
+                        ) && id == champ.summonerId
+            ) {
+                if (champ.champName.startsWith(query)) {
                     newChampList.add(champ)
                 }
             }
@@ -1697,30 +860,37 @@ class FakeRepository : LeagueRepository {
             } == false)
         },
         fetch = {
+            val mutableChampionList = mutableListOf<ChampionMastery>()
             val summoner = getCurrentSummoner()
             val url = Constants.ALL_CHAMPION_MASTERIES + (summoner?.id
                     ) + "?api_key=" + BuildConfig.API_KEY
-            val championList = getAllChampionMasteries(url)
-            val mutableChampionList = mutableListOf<ChampionMastery>()
-            for (champion in championList) {
-                val champRole = getChampRole(champion.championId) ?: ChampionRoleRates(
-                    0,
-                    TrueRoles(
-                        TOP = false,
-                        JUNGLE = false,
-                        MIDDLE = false,
-                        BOTTOM = false,
-                        UTILITY = false,
-                        ALL = true
-                    )
-                )
-                mutableChampionList.add(
-                    champion.copy(
-                        roles = champRole.roles,
-                        timeReceived = System.currentTimeMillis(),
-                        rankInfo = ChampRankInfo()
-                    )
-                )
+            when (val response = getAllChampionMasteries(url)) {
+                is Resource.Loading -> {
+                }
+                is Resource.Error -> {
+                }
+                is Resource.Success -> {
+                    for (champion in response.data!!) {
+                        val champRole = getChampRole(champion.championId) ?: ChampionRoleRates(
+                            0,
+                            TrueRoles(
+                                TOP = false,
+                                JUNGLE = false,
+                                MIDDLE = false,
+                                BOTTOM = false,
+                                UTILITY = false,
+                                ALL = true
+                            )
+                        )
+                        mutableChampionList.add(
+                            champion.copy(
+                                roles = champRole.roles,
+                                timeReceived = System.currentTimeMillis(),
+                                rankInfo = ChampRankInfo()
+                            )
+                        )
+                    }
+                }
             }
             mutableChampionList
         },
@@ -1737,41 +907,53 @@ class FakeRepository : LeagueRepository {
     }
 
     override suspend fun matchListForInitBoost(): Resource<List<String>?> {
+        var result: Resource<List<String>?> = Resource.Success(null)
         val summoner = getCurrentSummoner()
         if (summoner != null) {
             if (!summoner.initBoostCalculated) {
-                val response = getMatchListAsync()
-                return try {
-                    Resource.Success(response.await())
-                } catch (e: Exception) {
-                    Resource.Error(e, null)
+                val response = safeApiCall { getMatchListAsync() }
+                response.onSuccess {
+                    result = Resource.Success(it)
+                }
+                response.onFailure {
+                    result = Resource.Error(it, null)
                 }
             }
-        }
-        return Resource.Success(null)
+        } else result = Resource.Error(Throwable("Error Retrieving Summoner"))
+        return result
     }
 
-    private fun getMatchListAsync(): Deferred<List<String>> {
+    private fun getMatchListAsync(): Response<List<String>> {
         return if (shouldReturnNetworkError) {
-            CompletableDeferred(null)
+            Response.error(
+                404, "{\"key\":[\"somestuff\"]}"
+                    .toResponseBody("application/json".toMediaTypeOrNull())
+            )
         } else {
-            val list = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "10")
-            CompletableDeferred(list)
+            Response.success(listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"))
+
         }
     }
 
     override suspend fun getMatchDetails(matchId: String): Resource<MatchDetails> {
-        val response = getMatchDetailsMockAsync(matchId)
-        return try {
-            Resource.Success(response.await())
-        } catch (e: java.lang.Exception) {
-            Resource.Error(e, null)
+        val response = safeApiCall { getMatchDetailsMockAsync(matchId) }
+
+        var result: Resource<MatchDetails> = Resource.Loading(null)
+        response.onSuccess {
+            result = Resource.Success(it)
         }
+        response.onFailure {
+            result = Resource.Error(it, null)
+        }
+        return result
     }
 
-    private suspend fun getMatchDetailsMockAsync(matchId: String): Deferred<MatchDetails> {
+    private suspend fun getMatchDetailsMockAsync(matchId: String): Response<MatchDetails> {
         return if (shouldReturnNetworkError) {
-            CompletableDeferred(null)
+            Response.error(
+                404, "{\"key\":[\"somestuff\"]}"
+                    .toResponseBody("application/json".toMediaTypeOrNull())
+            )
         } else {
             val summoner = getCurrentSummoner()
             val participantList = listOf(
@@ -1962,7 +1144,7 @@ class FakeRepository : LeagueRepository {
             val info =
                 Info(gameDuration = 20.0, gameMode = "CLASSIC", participants = participantDataList)
             val matchDetails = MatchDetails(metadata = metaData, info = info, status = null)
-            CompletableDeferred(matchDetails)
+            Response.success(matchDetails)
         }
     }
 

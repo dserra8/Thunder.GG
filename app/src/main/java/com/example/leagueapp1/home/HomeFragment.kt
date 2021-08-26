@@ -53,22 +53,13 @@ class HomeFragment : Fragment() {
 
             summonersList.observe(viewLifecycleOwner) { summoners ->
                 if(summoners.isNotEmpty() && summoners != null) {
-                    val array = arrayListOf<String>()
-                    for (summoner in summoners) {
-                        array.add(summoner.name)
-                    }
-                    val arrayAdapter = ArrayAdapter(requireContext(), R.layout.dropdown_item, array)
+                    val arrayAdapter = ArrayAdapter(requireContext(), R.layout.dropdown_item, makeSummonerList(summoners))
                     binding.summonerNameTextView.setAdapter(arrayAdapter)
                 }
-
             }
 
             roleList.observe(viewLifecycleOwner){ list ->
-                if( list == null || list.isEmpty()){
-                    refreshRoleList()
-                }else{
-                    onGetRoleListEvent()
-                }
+                checkRoleList(list)
             }
 
             summonerProperties.observe(viewLifecycleOwner){

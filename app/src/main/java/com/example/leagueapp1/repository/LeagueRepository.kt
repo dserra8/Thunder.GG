@@ -10,6 +10,7 @@ import com.example.leagueapp1.util.Constants
 import com.example.leagueapp1.util.Resource
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
 import retrofit2.Response
 import java.util.concurrent.TimeUnit
 
@@ -92,7 +93,7 @@ interface LeagueRepository {
         champion: ChampListState
     ): Flow<HeaderItem>
 
-    suspend fun getAllChampionMasteries(url: String): List<ChampionMastery>?
+    suspend fun getAllChampionMasteries(url: String): Resource<List<ChampionMastery>?>
 
     fun getChampions(
         searchQuery: String,

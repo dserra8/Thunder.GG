@@ -7,7 +7,11 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import app.cash.turbine.test
 import com.example.leagueapp1.getOrAwaitValue
+import com.example.leagueapp1.home.HomeFragment
+import com.example.leagueapp1.launchFragmentInHiltContainer
 import com.google.common.truth.Truth.assertThat
+import dagger.hilt.android.testing.HiltAndroidRule
+import dagger.hilt.android.testing.HiltAndroidTest
 import junit.framework.Assert.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -18,18 +22,24 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import javax.inject.Inject
+import javax.inject.Named
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
 @ExperimentalCoroutinesApi
-@RunWith(AndroidJUnit4::class)
 @SmallTest
+@HiltAndroidTest
 class SummonerDaoTest {
+
+    @get:Rule
+    var hiltRule = HiltAndroidRule(this)
 
     @get:Rule
     var instantTaskExecutorRule = InstantTaskExecutorRule()
 
-    private lateinit var database: LeagueDatabase
+    @Inject
+    lateinit var database: LeagueDatabase
 
     private lateinit var summonersDao: SummonersDao
 
@@ -40,11 +50,7 @@ class SummonerDaoTest {
 
     @Before
     fun setup() {
-        database = Room.inMemoryDatabaseBuilder(
-            ApplicationProvider.getApplicationContext(),
-            LeagueDatabase::class.java
-        ).allowMainThreadQueries().build()
-
+        hiltRule.inject()
         summonersDao = database.summonersDao()
         summoner1 = SummonerProperties(
             "1", "1", "1", "Kate", 2.0, 1.0, 1.0, true, 1, true,
@@ -119,7 +125,7 @@ class SummonerDaoTest {
 
     @Test
     fun getSummoner() = runBlockingTest {
-       // summonersDao.insertSummoner(summoner3)
+        summonersDao.insertSummoner(summoner3)
         val verifySummoner = summonersDao.getSummoner()
         assertThat(verifySummoner).isEqualTo(summoner3)
     }

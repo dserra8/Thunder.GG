@@ -5,6 +5,8 @@ import com.example.leagueapp1.champListRecyclerView.ChampItem
 import com.example.leagueapp1.database.ChampionMastery
 import com.example.leagueapp1.repository.LeagueRepository
 import com.example.leagueapp1.repository.Repository
+import com.example.leagueapp1.util.DispatcherProvider
+import com.example.leagueapp1.util.StandardDispatchers
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -14,7 +16,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ChampScreenViewModel @Inject constructor(
     private val repository: LeagueRepository,
-    private val state: SavedStateHandle
+    private val state: SavedStateHandle,
+    private val dispatchers: DispatcherProvider
 ) : ViewModel() {
 
     val summonerFlow = repository.summoner.asLiveData()

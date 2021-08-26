@@ -3,21 +3,17 @@ package com.example.leagueapp1.repository
 
 import androidx.lifecycle.LiveData
 import androidx.room.withTransaction
-import androidx.work.ListenableWorker
 import com.example.leagueapp1.BuildConfig
 import com.example.leagueapp1.champListRecyclerView.HeaderItem
 import com.example.leagueapp1.database.*
 import com.example.leagueapp1.network.*
 import com.example.leagueapp1.repository.LeagueRepository.Companion.FRESH_TIMEOUT
-import com.example.leagueapp1.util.Constants
+import com.example.leagueapp1.util.*
 import com.example.leagueapp1.util.Constants.champMap
-import com.example.leagueapp1.util.Resource
-import com.example.leagueapp1.util.exhaustive
-import com.example.leagueapp1.util.networkBoundResource
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.withContext
 import retrofit2.Response
 import javax.inject.Inject
 
@@ -25,12 +21,38 @@ import javax.inject.Inject
 class Repository @Inject constructor(
     private val api: RiotApiService,
     private val db: LeagueDatabase,
+    private val dispatchers: DispatcherProvider
 ) : LeagueRepository {
 
     private val summonersDao = db.summonersDao()
     private val championsDao = db.championsDao()
     private val championRoleRatesDao = db.championRoleRatesDao()
 
+
+    /**
+     * Function to make safe api calls and returns a kotlin Result.
+     */
+    private suspend inline fun <T> safeApiCall(crossinline responseFunc: suspend () -> Response<T>) : Result<T> {
+
+        val response: Response<T>
+        try {
+            response = withContext(dispatchers.io) {
+                responseFunc.invoke()
+            }
+        } catch (e: Exception) {
+            return Result.failure(e)
+        }
+
+        if(!response.isSuccessful){
+            return Result.failure(Exception(response.errorBody().toString()))
+        } else {
+            if (response.body() == null) {
+                return Result.failure(Exception("Unknown Error"))
+            }
+        }
+
+        return Result.success(response.body()!!)
+    }
 
     /**
      * Network and Database Functions for Summoners
@@ -303,15 +325,19 @@ class Repository @Inject constructor(
     }
 
 
-    override suspend fun getAllChampionMasteries(url: String): List<ChampionMastery>? {
-        val response = api.getAllChampionMasteries(url)
-        return if(response.isSuccessful) {
-            val list = response.body()!!
+    override suspend fun getAllChampionMasteries(url: String): Resource<List<ChampionMastery>?> {
+        val response = safeApiCall{ api.getAllChampionMasteries(url) }
+        var result: Resource<List<ChampionMastery>?> = Resource.Loading(null)
+        response.onSuccess {  list ->
             for (champion in list) {
                 champion.champName = champMap[champion.championId] ?: "Unknown"
             }
-            list
-        } else null
+            result = Resource.Success(list)
+        }
+        response.onFailure {
+            result = Resource.Error(it, null)
+        }
+        return result
     }
 
     override fun getChampions(
@@ -354,31 +380,32 @@ class Repository @Inject constructor(
         },
         fetch = {
             db.withTransaction {
+                val mutableChampionList = mutableListOf<ChampionMastery>()
                 val summoner = getCurrentSummoner()
                 val url = Constants.ALL_CHAMPION_MASTERIES + (summoner?.id
                         ) + "?api_key=" + BuildConfig.API_KEY
-                val championList = getAllChampionMasteries(url)
-                val mutableChampionList = mutableListOf<ChampionMastery>()
-                if (championList != null) {
-                    for (champion in championList) {
-                        val champRole = getChampRole(champion.championId) ?: ChampionRoleRates(
-                            0,
-                            TrueRoles(
-                                TOP = false,
-                                JUNGLE = false,
-                                MIDDLE = false,
-                                BOTTOM = false,
-                                UTILITY = false,
-                                ALL = true
+                when (val response = getAllChampionMasteries(url)) {
+                    is Resource.Loading -> {}
+                    is Resource.Error -> {}
+                    is Resource.Success -> {
+                        for (champion in response.data!!) {
+                            val champRole = getChampRole(champion.championId) ?: ChampionRoleRates(
+                                0,
+                                TrueRoles(
+                                    TOP = false,
+                                    JUNGLE = false,
+                                    MIDDLE = false,
+                                    BOTTOM = false,
+                                    UTILITY = false,
+                                    ALL = true
+                                )
                             )
-                        )
-                        mutableChampionList.add(
-                            champion.copy(
-                                roles = champRole.roles,
-                                timeReceived = System.currentTimeMillis(),
-                                rankInfo = ChampRankInfo()
-                            )
-                        )
+                            mutableChampionList.add(
+                                champion.copy(
+                                    roles = champRole.roles,
+                                    timeReceived = System.currentTimeMillis(),
+                                    rankInfo = ChampRankInfo()))
+                        }
                     }
                 }
                 mutableChampionList
@@ -397,30 +424,32 @@ class Repository @Inject constructor(
      */
 
     override suspend fun matchListForInitBoost(): Resource<List<String>?> {
+        var result: Resource<List<String>?> = Resource.Success(null)
         val summoner = getCurrentSummoner()
         if (summoner != null) {
             if (!summoner.initBoostCalculated) {
-                val url =
-                    Constants.MATCH_LIST + summoner.puuid + "/ids?start=0&count=15&api_key=" + BuildConfig.API_KEY
-
-                val response = api.getMatchListAsync(url)
-                return if(response.isSuccessful) {
-                    Resource.Success(response.body())
-                } else {
-                    Resource.Error(Exception(response.errorBody().toString()), null)
+                val response = safeApiCall { api.getMatchListAsync(Constants.MATCH_LIST + summoner.puuid + "/ids?start=0&count=15&api_key=" + BuildConfig.API_KEY) }
+                response.onSuccess {
+                    result = Resource.Success(it)
+                }
+                response.onFailure {
+                    result = Resource.Error(it, null)
                 }
             }
-        }
-        return Resource.Success(null)
+        } else result = Resource.Error(Throwable("Error Retrieving Summoner"))
+        return result
     }
 
     override suspend fun getMatchDetails(matchId: String): Resource<MatchDetails> {
-        val url = Constants.MATCH_DETAIL_URL + matchId + "?api_key=" + BuildConfig.API_KEY
-        val response = api.getMatchDetailsAsync(url)
-        return if(response.isSuccessful) {
-            Resource.Success(response.body()!!)
-        } else{
-            Resource.Error(Exception(response.errorBody().toString()), null)
+        val response = safeApiCall{ api.getMatchDetailsAsync(Constants.MATCH_DETAIL_URL + matchId + "?api_key=" + BuildConfig.API_KEY) }
+
+        var result: Resource<MatchDetails> = Resource.Loading(null)
+        response.onSuccess {
+            result = Resource.Success(it)
         }
+        response.onFailure {
+            result = Resource.Error(it, null)
+        }
+        return result
     }
 }

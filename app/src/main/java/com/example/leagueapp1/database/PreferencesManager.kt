@@ -91,7 +91,7 @@ class PreferencesManager @Inject constructor(@ApplicationContext val context: Co
     }
 
     val mainPreferencesFlow = context.dataMainActivity.data
-        .catch {exception ->
+        .catch { exception ->
         if(exception is IOException){
             Log.e(TAG, "Error reading preferences. ", exception)
         } else{

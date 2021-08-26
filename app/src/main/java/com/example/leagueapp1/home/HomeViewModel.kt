@@ -1,11 +1,15 @@
 package com.example.leagueapp1.home
 
 
+import android.widget.ArrayAdapter
 import androidx.lifecycle.*
+import com.example.leagueapp1.R
+import com.example.leagueapp1.database.ChampionRoleRates
 import com.example.leagueapp1.database.SummonerProperties
 import com.example.leagueapp1.network.ErrorResponse
 import com.example.leagueapp1.repository.LeagueRepository
 import com.example.leagueapp1.repository.Repository
+import com.example.leagueapp1.util.DispatcherProvider
 import com.example.leagueapp1.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -17,7 +21,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class HomeViewModel @Inject constructor(private val repository: LeagueRepository) : ViewModel() {
+class HomeViewModel @Inject constructor(
+    private val repository: LeagueRepository,
+    ) : ViewModel() {
 
     //Live Data for getSummonerId call
     private val _summonerProperties = MutableLiveData<Resource<SummonerProperties>>()
@@ -40,12 +46,21 @@ class HomeViewModel @Inject constructor(private val repository: LeagueRepository
     val homeEvent = homeEventChannel.receiveAsFlow()
 
     val roleList = repository.roleList
+
     val summonersList = repository.getAllSummoners().asLiveData()
 
 
     /**
      * ViewModel functions for when the submit button is clicked
      */
+
+    fun makeSummonerList(summoners : List<SummonerProperties>) : ArrayList<String>  {
+        val array = arrayListOf<String>()
+        for (summoner in summoners) {
+            array.add(summoner.name)
+        }
+        return array
+    }
 
     fun onSubmit() {
         viewModelScope.launch {
@@ -76,8 +91,7 @@ class HomeViewModel @Inject constructor(private val repository: LeagueRepository
                     if (summonerProperties.value?.data != null) {
                         updatesDone = true
                         homeEventChannel.send(HomeEvents.SummonerFound)
-                    }
-                    else {
+                    } else {
                         homeEventChannel.send(HomeEvents.SummonerNotFound(summonerProperties.value?.error!!))
                     }
                 }
@@ -96,8 +110,16 @@ class HomeViewModel @Inject constructor(private val repository: LeagueRepository
     /**
      * ViewModel functions related to champion roles
      */
-    fun refreshRoleList() {
-        viewModelScope.launch(Dispatchers.IO) {
+
+    fun checkRoleList(list: List<ChampionRoleRates>?) {
+        if( list == null || list.isEmpty()){
+            refreshRoleList()
+        }else{
+            onGetRoleListEvent()
+        }
+    }
+    private fun refreshRoleList() {
+        viewModelScope.launch {
             when (val result = repository.refreshChampionRates()) {
                 "Role List Success" -> {
                     onGetRoleListEvent()
@@ -110,17 +132,16 @@ class HomeViewModel @Inject constructor(private val repository: LeagueRepository
         }
     }
 
-    fun onGetRoleListEvent() = viewModelScope.launch{
+    private fun onGetRoleListEvent() = viewModelScope.launch {
         roleListReady = true
         homeEventChannel.send(HomeEvents.RoleListReady)
     }
 
     fun roleListAndUpdatesReady() {
-        if(updatesDone && roleListFailed) {
+        if (updatesDone && roleListFailed) {
             roleListFailed = false
             refreshRoleList()
-        }
-        else if (roleListReady && updatesDone) {
+        } else if (roleListReady && updatesDone) {
             viewModelScope.launch {
                 roleListReady = false
                 updatesDone = false
@@ -145,6 +166,6 @@ class HomeViewModel @Inject constructor(private val repository: LeagueRepository
         data class SummonerNotFound(val error: Throwable) : HomeEvents()
         object SubmitClicked : HomeEvents()
         object RoleListReady : HomeEvents()
-        data class RoleListFailed(val errorMessage: String): HomeEvents()
+        data class RoleListFailed(val errorMessage: String) : HomeEvents()
     }
 }

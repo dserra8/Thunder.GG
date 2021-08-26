@@ -6,6 +6,7 @@ import com.example.leagueapp1.champListRecyclerView.ChampItem
 import com.example.leagueapp1.network.MatchDetails
 import com.example.leagueapp1.repository.LeagueRepository
 import com.example.leagueapp1.util.Constants
+import com.example.leagueapp1.util.DispatcherProvider
 import com.example.leagueapp1.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -17,7 +18,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class IntroChampViewModel @Inject constructor(
-    val repository: LeagueRepository
+    val repository: LeagueRepository,
+    private val dispatchers: DispatcherProvider
 ) : ViewModel(){
 
     val summonerFlow = repository.summoner.asLiveData()
@@ -32,6 +34,8 @@ class IntroChampViewModel @Inject constructor(
     private val lpSeparation = 100
 
     private val requiredAmountOfGames = 3
+
+    private var transitioned = false
 
 
     fun matchListForRecentBoost() = viewModelScope.launch {
@@ -54,7 +58,7 @@ class IntroChampViewModel @Inject constructor(
     data class ChampWinRate(var wins: Int, var total: Int)
 
     private suspend fun calculateRecentBoost(matchList :List<String>) {
-        withContext(Dispatchers.Default) {
+        withContext(dispatchers.default) {
             val winRatesList = hashMapOf<Int, ChampWinRate>()
             for (matchId in matchList) {
                 val match = repository.getMatchDetails(matchId)
@@ -198,7 +202,10 @@ class IntroChampViewModel @Inject constructor(
     }
 
     fun animationEnded() = viewModelScope.launch {
-        introChampEventsChannel.send(IntroChampEvents.AnimationEnded)
+        if(!transitioned) {
+            transitioned = true
+            introChampEventsChannel.send(IntroChampEvents.AnimationEnded)
+        }
     }
 
     sealed class IntroChampEvents {

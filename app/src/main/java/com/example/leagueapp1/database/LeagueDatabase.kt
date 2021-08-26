@@ -3,7 +3,7 @@ package com.example.leagueapp1.database
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.example.leagueapp1.network.ApplicationScope
+import com.example.leagueapp1.di.ApplicationScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
