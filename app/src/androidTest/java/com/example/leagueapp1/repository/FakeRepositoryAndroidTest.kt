@@ -17,7 +17,7 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 import retrofit2.Response
 import javax.inject.Inject
 
-class FakeRepository @Inject constructor(
+class FakeRepositoryAndroidTest @Inject constructor(
     private val dispatchers: DispatcherProvider
 ) : LeagueRepository {
     private val championList = mutableListOf<ChampionMastery>()
@@ -83,21 +83,14 @@ class FakeRepository @Inject constructor(
             )
         } else {
             val name = url.substringBefore("?").substringAfterLast("/")
-            var response: Response<SummonerProperties>
+            val response: Response<SummonerProperties>
             if (serverSummonerList.contains(name)) {
-                val summoner = SummonerProperties(
+                val summoner = createSummonerProperties(
                     id = id.toString(),
                     accountId = id.toString(),
                     puuid = id.toString(),
                     name = name,
-                    profileIconId = 0.0,
-                    revisionDate = 0.0,
                     summonerLevel = 10.0,
-                    current = false,
-                    timeReceived = 0,
-                    initBoostCalculated = false,
-                    rank = null,
-                    status = null
                 )
                 id++
                 response = Response.success(summoner)
@@ -315,21 +308,6 @@ class FakeRepository @Inject constructor(
         }
         return result
     }
-
-    private fun createChampionRates(
-        UTILITY: Rate = Rate(1.2),
-        JUNGLE: Rate = Rate(0.1),
-        BOTTOM: Rate = Rate(0.2),
-        MIDDLE: Rate = Rate(0.7),
-        TOP: Rate = Rate(0.2)
-    ) = ChampionRates(
-        UTILITY = UTILITY,
-        JUNGLE = JUNGLE,
-        BOTTOM = BOTTOM,
-        MIDDLE = MIDDLE,
-        TOP = TOP
-    )
-
 
     private fun getChampionRatesMockAsync(): Response<ChampionRoles> {
         return if (shouldReturnNetworkError) {
@@ -671,72 +649,21 @@ class FakeRepository @Inject constructor(
                     .toResponseBody("application/json".toMediaTypeOrNull())
             )
         } else {
-            val champion1 = ChampionMastery(
-                championId = 1,
-                championLevel = 1.0,
-                championPoints = 200.0,
-                lastPlayTime = 1000.0,
-                championPointsSinceLastLevel = 10.0,
-                championPointsUntilNextLevel = 100.0,
-                chestGranted = false,
-                tokensEarned = 10.0,
-                summonerId = "123",
-                champName = "Lux",
-                timeReceived = 10000,
-                rankInfo = null,
-                roles = TrueRoles(
-                    TOP = false,
-                    JUNGLE = false,
-                    MIDDLE = true,
-                    BOTTOM = false,
-                    UTILITY = true
-                )
-            )
-            val champion2 = ChampionMastery(
+            val champion1 = createChampionMastery()
+            val champion2 = createChampionMastery(
                 championId = 2,
-                championLevel = 1.0,
                 championPoints = 300.0,
-                lastPlayTime = 1000.0,
-                championPointsSinceLastLevel = 10.0,
-                championPointsUntilNextLevel = 100.0,
-                chestGranted = false,
-                tokensEarned = 10.0,
-                summonerId = "123",
-                champName = "Abs",
-                timeReceived = 10000,
-                rankInfo = null,
-                roles = null
-            )
-            val champion3 = ChampionMastery(
+                champName = "Olaf")
+            val champion3 = createChampionMastery(
                 championId = 3,
-                championLevel = 1.0,
                 championPoints = 400.0,
-                lastPlayTime = 1000.0,
-                championPointsSinceLastLevel = 10.0,
-                championPointsUntilNextLevel = 100.0,
-                chestGranted = false,
-                tokensEarned = 10.0,
-                summonerId = "123",
-                champName = "Darius",
-                timeReceived = 10000,
-                rankInfo = null,
-                roles = null
+                champName = "Galio",
+                rankInfo = ChampRankInfo(experienceBoost = 20, recentBoost = 0, rank = "SILVER")
             )
-            val champion4 = ChampionMastery(
+            val champion4 = createChampionMastery(
                 championId = 4,
-                championLevel = 1.0,
                 championPoints = 500.0,
-                lastPlayTime = 1000.0,
-                championPointsSinceLastLevel = 10.0,
-                championPointsUntilNextLevel = 100.0,
-                chestGranted = false,
-                tokensEarned = 10.0,
-                summonerId = "123",
-                champName = "Zion",
-                timeReceived = 10000,
-                rankInfo = null,
-                roles = null
-            )
+                champName = "Twisted Fate")
             Response.success(listOf(champion1, champion2, champion3, champion4))
         }
     }
@@ -882,11 +809,12 @@ class FakeRepository @Inject constructor(
                                 ALL = true
                             )
                         )
+                        val rankInfo = champion.rankInfo ?: ChampRankInfo()
                         mutableChampionList.add(
                             champion.copy(
                                 roles = champRole.roles,
                                 timeReceived = System.currentTimeMillis(),
-                                rankInfo = ChampRankInfo()
+                                rankInfo = rankInfo
                             )
                         )
                     }
@@ -948,6 +876,8 @@ class FakeRepository @Inject constructor(
         return result
     }
 
+
+
     private suspend fun getMatchDetailsMockAsync(matchId: String): Response<MatchDetails> {
         return if (shouldReturnNetworkError) {
             Response.error(
@@ -969,161 +899,51 @@ class FakeRepository @Inject constructor(
                 "102"
             )
             val metaData = MetaData(matchId, participantList)
-            val participantDataSummoner = ParticipantData(
-                assists = 1,
-                baronKills = 3,
-                deaths = 9,
-                dragonKills = 2,
-                kills = 4,
-                neutralMinionsKilled = 60,
-                objectivesStolen = 0,
-                totalDamageDealtToChampions = 30000.0,
-                totalMinionsKilled = 100,
-                visionScore = 20,
-                championId = 99,
+            val participantDataSummoner = createParticipantData(
                 championName = "Lux",
-                puuid = summoner?.puuid ?: "0",
-                win = true
+                puuid = summoner?.puuid ?: "0"
             )
-            val participantData100 = ParticipantData(
-                assists = 1,
-                baronKills = 3,
-                deaths = 9,
-                dragonKills = 2,
-                kills = 4,
-                neutralMinionsKilled = 60,
-                objectivesStolen = 0,
-                totalDamageDealtToChampions = 30000.0,
-                totalMinionsKilled = 100,
-                visionScore = 20,
-                championId = 1,
+            val participantData100 = createParticipantData(
                 championName = "Annie",
-                puuid = "100",
-                win = true
+                puuid = "100"
             )
-            val participantData200 = ParticipantData(
-                assists = 1,
-                baronKills = 3,
-                deaths = 9,
-                dragonKills = 2,
-                kills = 4,
-                neutralMinionsKilled = 60,
-                objectivesStolen = 0,
-                totalDamageDealtToChampions = 30000.0,
-                totalMinionsKilled = 100,
-                visionScore = 20,
-                championId = 2,
+            val participantData200 = createParticipantData(
                 championName = "Olaf",
-                puuid = "200",
-                win = true
+                puuid = "200"
             )
-            val participantData500 = ParticipantData(
-                assists = 1,
-                baronKills = 3,
-                deaths = 9,
-                dragonKills = 2,
-                kills = 4,
-                neutralMinionsKilled = 60,
-                objectivesStolen = 0,
-                totalDamageDealtToChampions = 30000.0,
-                totalMinionsKilled = 100,
-                visionScore = 20,
-                championId = 3,
+            val participantData500 = createParticipantData(
                 championName = "Galio",
-                puuid = "500",
-                win = true
+                puuid = "500"
             )
-            val participantData300 = ParticipantData(
-                assists = 1,
-                baronKills = 3,
-                deaths = 9,
-                dragonKills = 2,
-                kills = 4,
-                neutralMinionsKilled = 60,
-                objectivesStolen = 0,
-                totalDamageDealtToChampions = 30000.0,
-                totalMinionsKilled = 100,
-                visionScore = 20,
-                championId = 4,
+            val participantData300 = createParticipantData(
                 championName = "Twisted Fate",
-                puuid = "300",
-                win = true
+                puuid = "300"
             )
-            val participantData123 = ParticipantData(
-                assists = 1,
-                baronKills = 3,
-                deaths = 9,
-                dragonKills = 2,
-                kills = 4,
-                neutralMinionsKilled = 60,
-                objectivesStolen = 0,
-                totalDamageDealtToChampions = 30000.0,
-                totalMinionsKilled = 100,
-                visionScore = 20,
+            val participantData123 = createParticipantData(
                 championId = 5,
                 championName = "Xin Zhao",
                 puuid = "123",
                 win = false
             )
-            val participantData101 = ParticipantData(
-                assists = 1,
-                baronKills = 3,
-                deaths = 9,
-                dragonKills = 2,
-                kills = 4,
-                neutralMinionsKilled = 60,
-                objectivesStolen = 0,
-                totalDamageDealtToChampions = 30000.0,
-                totalMinionsKilled = 100,
-                visionScore = 20,
+            val participantData101 = createParticipantData(
                 championId = 6,
                 championName = "Urgot",
                 puuid = "101",
                 win = false
             )
-            val participantData90 = ParticipantData(
-                assists = 1,
-                baronKills = 3,
-                deaths = 9,
-                dragonKills = 2,
-                kills = 4,
-                neutralMinionsKilled = 60,
-                objectivesStolen = 0,
-                totalDamageDealtToChampions = 30000.0,
-                totalMinionsKilled = 100,
-                visionScore = 20,
+            val participantData90 = createParticipantData(
                 championId = 7,
                 championName = "LeBlanc",
                 puuid = "90",
                 win = false
             )
-            val participantData91 = ParticipantData(
-                assists = 1,
-                baronKills = 3,
-                deaths = 9,
-                dragonKills = 2,
-                kills = 4,
-                neutralMinionsKilled = 60,
-                objectivesStolen = 0,
-                totalDamageDealtToChampions = 30000.0,
-                totalMinionsKilled = 100,
-                visionScore = 20,
+            val participantData91 = createParticipantData(
                 championId = 10,
                 championName = "Kayle",
                 puuid = "91",
                 win = false
             )
-            val participantData102 = ParticipantData(
-                assists = 1,
-                baronKills = 3,
-                deaths = 9,
-                dragonKills = 2,
-                kills = 4,
-                neutralMinionsKilled = 60,
-                objectivesStolen = 0,
-                totalDamageDealtToChampions = 30000.0,
-                totalMinionsKilled = 100,
-                visionScore = 20,
+            val participantData102 = createParticipantData(
                 championId = 12,
                 championName = "Alistar",
                 puuid = "102",

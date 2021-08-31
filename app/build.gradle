@@ -37,9 +37,17 @@ android {
         jvmTarget = '1.8'
     }
     packagingOptions {
+        exclude '**/attach_hotspot_windows.dll'
         exclude 'META-INF/AL2.0'
         exclude 'META-INF/LGPL2.1'
     }
+
+    configurations.all {
+        resolutionStrategy {
+            exclude group: "org.jetbrains.kotlinx", module: "kotlinx-coroutines-debug"
+        }
+    }
+
 }
 
 dependencies {
@@ -55,6 +63,7 @@ dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-reflect'
     // Material Dependency
     implementation 'com.google.android.material:material:1.4.0'
+    implementation 'androidx.test.espresso:espresso-contrib:3.4.0'
 
 
     //Testing
@@ -84,6 +93,7 @@ dependencies {
     //Fragment Dependencies
     implementation 'androidx.navigation:navigation-fragment-ktx:2.3.5'
     implementation 'androidx.navigation:navigation-ui-ktx:2.3.5'
+    implementation "androidx.fragment:fragment-ktx:1.3.6"
 
     //Retrofit Dependencies
     implementation "com.squareup.retrofit2:retrofit:$version_retrofit"
@@ -103,12 +113,6 @@ dependencies {
 
     //LiveData
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.3.1"
-    // Moshi
-    implementation "com.squareup.moshi:moshi:$version_moshi"
-    implementation "com.squareup.moshi:moshi-kotlin:$version_moshi"
-
-    // Retrofit with Moshi Converter
-    implementation "com.squareup.retrofit2:converter-moshi:$version_retrofit"
 
     // Recycler View and CardView
     implementation "androidx.recyclerview:recyclerview:1.2.1"
@@ -125,6 +129,13 @@ dependencies {
     implementation "com.google.dagger:hilt-android:2.38.1"
     kapt "com.google.dagger:hilt-compiler:2.38.1"
     implementation "androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03"
+
+
+    implementation "com.google.dagger:dagger:2.38.1"
+    implementation 'com.google.dagger:dagger-android:2.38.1'
+    implementation 'com.google.dagger:dagger-android-support:2.38.1' // if you use the support libraries
+    kapt 'com.google.dagger:dagger-android-processor:2.38.1'
+    kapt 'com.google.dagger:dagger-compiler:2.38.1'
 
     // Worker Manager
     implementation "androidx.work:work-runtime-ktx:2.7.0-alpha05"

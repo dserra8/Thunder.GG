@@ -7,7 +7,7 @@
 
         <variable
             name="viewModel"
-            type="com.example.leagueapp1.champDetails.ChampScreenViewModel" />
+            type="com.example.leagueapp1.ui.champDetails.ChampScreenViewModel" />
     </data>
 
     <ScrollView
@@ -21,7 +21,7 @@
             android:layout_height="wrap_content"
             android:background="@drawable/home_screen_drawable"
             app:layoutDescription="@xml/champ_screen_xml_constraintlayout_scene"
-            tools:context="com.example.leagueapp1.champDetails">
+            tools:context="com.example.leagueapp1.ui.champDetails">
 
 
             <ImageView

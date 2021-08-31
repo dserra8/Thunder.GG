@@ -7,7 +7,7 @@ object Constants {
         const val MATCH_LIST = "https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/"
         const val MATCH_DETAIL_URL = "https://americas.api.riotgames.com/lol/match/v5/matches/"
         const val CHAMPION_RATES_URL = "http://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/championrates.json"
-        const val PROFILE_ICON_URL = "http://ddragon.leagueoflegends.com/cdn/11.15.1/img/profileicon/"
+        const val PROFILE_ICON_URL = "http://ddragon.leagueoflegends.com/cdn/11.16.1/img/profileicon/"
         const val SPLASH_ART_URL = "http://ddragon.leagueoflegends.com/cdn/img/champion/splash/"
         const val SUMMONER_RANK_URL = "https://na1.api.riotgames.com/lol/league/v4/entries/by-summoner/"
 

@@ -7,8 +7,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import app.cash.turbine.test
 import com.example.leagueapp1.getOrAwaitValue
-import com.example.leagueapp1.home.HomeFragment
-import com.example.leagueapp1.launchFragmentInHiltContainer
 import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -23,7 +21,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import javax.inject.Inject
-import javax.inject.Named
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime

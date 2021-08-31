@@ -4,7 +4,7 @@ package com.example.leagueapp1.repository
 import androidx.lifecycle.LiveData
 import androidx.room.withTransaction
 import com.example.leagueapp1.BuildConfig
-import com.example.leagueapp1.champListRecyclerView.HeaderItem
+import com.example.leagueapp1.adapters.HeaderItem
 import com.example.leagueapp1.database.*
 import com.example.leagueapp1.network.*
 import com.example.leagueapp1.repository.LeagueRepository.Companion.FRESH_TIMEOUT
@@ -400,11 +400,12 @@ class Repository @Inject constructor(
                                     ALL = true
                                 )
                             )
+                            val rankInfo = champion.rankInfo ?: ChampRankInfo()
                             mutableChampionList.add(
                                 champion.copy(
                                     roles = champRole.roles,
                                     timeReceived = System.currentTimeMillis(),
-                                    rankInfo = ChampRankInfo()))
+                                    rankInfo = rankInfo))
                         }
                     }
                 }

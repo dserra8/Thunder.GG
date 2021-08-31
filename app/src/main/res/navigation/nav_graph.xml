@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/homeFragment"
-        android:name="com.example.leagueapp1.home.HomeFragment"
+        android:name="com.example.leagueapp1.ui.home.HomeFragment"
         android:label="Thunder.GG"
         tools:layout="@layout/home" >
         <action
@@ -20,7 +20,7 @@
     </fragment>
     <fragment
         android:id="@+id/listChampFragment"
-        android:name="com.example.leagueapp1.listChamp.ListChampFragment"
+        android:name="com.example.leagueapp1.ui.listChamp.ListChampFragment"
         android:label="list_champs"
         tools:layout="@layout/list_champs" >
         <action
@@ -43,24 +43,24 @@
     </fragment>
     <fragment
         android:id="@+id/champScreenFragment"
-        android:name="com.example.leagueapp1.champDetails.ChampScreenFragment"
+        android:name="com.example.leagueapp1.ui.champDetails.ChampScreenFragment"
         android:label="champ_screen"
         tools:layout="@layout/champ_screen" >
         <argument
             android:name="championPicked"
-            app:argType="com.example.leagueapp1.champListRecyclerView.ChampItem" />
+            app:argType="com.example.leagueapp1.adapters.ChampItem" />
         <action
             android:id="@+id/action_champScreenFragment_to_listChampFragment"
             app:destination="@id/listChampFragment" />
     </fragment>
     <fragment
         android:id="@+id/introChampFragment"
-        android:name="com.example.leagueapp1.champDetails.IntroChampFragment"
+        android:name="com.example.leagueapp1.ui.champDetails.IntroChampFragment"
         android:label="Initial Rank"
         tools:layout="@layout/intro_champ_layout" >
         <argument
             android:name="introChampionPicked"
-            app:argType="com.example.leagueapp1.champListRecyclerView.ChampItem" />
+            app:argType="com.example.leagueapp1.adapters.ChampItem" />
         <action
             android:id="@+id/action_introChampFragment_to_champScreenFragment"
             app:destination="@id/champScreenFragment"
@@ -70,7 +70,7 @@
     </fragment>
     <fragment
         android:id="@+id/settingsFragment"
-        android:name="com.example.leagueapp1.settings.SettingsFragment"
+        android:name="com.example.leagueapp1.ui.settings.SettingsFragment"
         android:label="Settings"
         tools:layout="@layout/settings_layout" />
 

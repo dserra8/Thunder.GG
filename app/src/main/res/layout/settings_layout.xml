@@ -7,7 +7,7 @@
     <data>
         <variable
             name="viewModel"
-            type="com.example.leagueapp1.settings.SettingsViewModel" />
+            type="com.example.leagueapp1.ui.settings.SettingsViewModel" />
     </data>
 
     <LinearLayout
