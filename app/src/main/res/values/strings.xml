@@ -11,4 +11,12 @@
     <string name="delete_summoner_text">Delete Summoner</string>
     <string name="no_summoner_text">No Summoner</string>
     <string name="delete_all_summoners_text">Delete All Summoners</string>
+    <string name="login_text">Login</string>
+    <string name="username_text">Username</string>
+    <string name="password_text">Password</string>
+    <string name="make_account_text">Swipe up to make an Account!</string>
+    <string name="swipe_down_login_text">Already Have an Account? Swipe Down To Login!</string>
+    <string name="register_text">Register!</string>
+    <string name="repeat_password_text">Repeat Password</string>
+    <string name="summoner_name_text">Summoner Name</string>
 </resources>

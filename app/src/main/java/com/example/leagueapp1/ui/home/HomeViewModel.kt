@@ -2,9 +2,9 @@ package com.example.leagueapp1.ui.home
 
 
 import androidx.lifecycle.*
-import com.example.leagueapp1.database.ChampionRoleRates
-import com.example.leagueapp1.database.SummonerProperties
-import com.example.leagueapp1.network.ErrorResponse
+import com.example.leagueapp1.data.local.ChampionRoleRates
+import com.example.leagueapp1.data.local.SummonerProperties
+import com.example.leagueapp1.data.remote.ErrorResponse
 import com.example.leagueapp1.repository.LeagueRepository
 import com.example.leagueapp1.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,7 +19,8 @@ class HomeViewModel @Inject constructor(
     ) : ViewModel() {
 
     //Live Data for getSummonerId call
-    private val _summonerProperties = MutableLiveData<Resource<SummonerProperties>>()
+    private val _summonerProperties = MutableLiveData<Resource<
+            SummonerProperties>>()
     val summonerProperties: LiveData<Resource<SummonerProperties>> = _summonerProperties
 
     //Live Data for Error Response

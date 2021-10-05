@@ -15,11 +15,11 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.lBeagueapp1.ListChamp.ListChampViewModel
+import com.example.leagueapp1.ui.MainViewModel
+import com.example.leagueapp1.R
 import com.example.leagueapp1.adapters.ChampItem
 import com.example.leagueapp1.adapters.ChampionListAdapterNoHeader
-import com.example.leagueapp1.MainViewModel
-import com.example.leagueapp1.R
-import com.example.leagueapp1.database.ChampionMastery
+import com.example.leagueapp1.data.local.ChampionMastery
 import com.example.leagueapp1.database.SortOrder
 import com.example.leagueapp1.databinding.ListChampsBinding
 import com.example.leagueapp1.util.*
@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
+@ExperimentalCoroutinesApi
 @AndroidEntryPoint
 class ListChampFragment : Fragment() {
 
@@ -44,7 +45,7 @@ class ListChampFragment : Fragment() {
 
     private lateinit var listAdapter: ChampionListAdapterNoHeader
 
-    @ExperimentalCoroutinesApi
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -141,7 +142,7 @@ class ListChampFragment : Fragment() {
         val list = mutableListOf<ChampItem>()
 
         for (champion in data) {
-            val name: String = champion.champName
+            val name: String = champion.champName ?: ""
             val photoName = viewModel.formatPhotoName(name)
             val imageId: Int =
                 resources.getIdentifier(photoName, "drawable", activity?.packageName)

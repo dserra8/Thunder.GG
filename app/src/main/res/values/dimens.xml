@@ -3,4 +3,9 @@
     <dimen name="spacing_normal">30</dimen>
     <dimen name="rank_size">200dp</dimen>
     <dimen name="lp_progress_bar_size">200dp</dimen>
+    <dimen name="custom_min_width">88dp</dimen>
+    <dimen name="custom_max_width">488dp</dimen>
+    <dimen name="login_register_margin">16dp</dimen>
+    <dimen name="loginContainerHeight">80dp</dimen>
+    <dimen name="login_register_button_margin">60dp</dimen>
 </resources>

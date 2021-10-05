@@ -4,11 +4,9 @@
         <shape
             android:shape="rectangle"
             android:useLevel="true">
-            <corners android:radius="7dp"/>
-            <gradient android:startColor="@color/primaryColor"
-                android:endColor="@color/design_default_color_background">
-
-            </gradient>
+            <corners android:radius="15dp"/>
+            <solid android:color="@color/primaryLightColor" />
         </shape>
+
     </item>
 </layer-list>

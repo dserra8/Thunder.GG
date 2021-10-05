@@ -26,10 +26,8 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.work.*
-import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
 import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.example.leagueapp1.MainViewModel
 import com.example.leagueapp1.R
 import com.example.leagueapp1.databinding.ActivityMainBinding
 import com.example.leagueapp1.ui.factory.DefaultFragmentFactoryEntryPoint
@@ -38,7 +36,6 @@ import com.example.leagueapp1.util.Constants
 import com.example.leagueapp1.util.exhaustive
 import com.example.leagueapp1.work.RefreshChampionRolesWorker
 import com.google.android.material.navigation.NavigationView
-import dagger.hilt.EntryPoint
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.CoroutineScope
@@ -49,7 +46,7 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
-
+@ExperimentalCoroutinesApi
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
@@ -74,7 +71,7 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var glide: RequestManager
 
-    @ExperimentalCoroutinesApi
+
     @SuppressLint("WrongConstant")
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -153,12 +150,6 @@ class MainActivity : AppCompatActivity() {
                     }.exhaustive
                 }
             }
-        }
-
-        lifecycleScope.launch(Dispatchers.Main) {
-            viewModel.collectPreferencesFlow()
-            if (viewModel.isActive)
-                navController.navigate(HomeFragmentDirections.actionHomeFragmentToListChampFragment())
         }
 
         delayedInit()

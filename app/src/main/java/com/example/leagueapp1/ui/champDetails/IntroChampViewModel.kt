@@ -3,7 +3,7 @@ package com.example.leagueapp1.ui.champDetails
 import androidx.lifecycle.*
 import com.example.leagueapp1.R
 import com.example.leagueapp1.adapters.ChampItem
-import com.example.leagueapp1.network.MatchDetails
+import com.example.leagueapp1.data.remote.MatchDetails
 import com.example.leagueapp1.repository.LeagueRepository
 import com.example.leagueapp1.util.Constants
 import com.example.leagueapp1.util.DispatcherProvider
@@ -122,14 +122,14 @@ class IntroChampViewModel @Inject constructor(
             }
             if(champion.value.total <= requiredAmountOfGames) recentBoost = 0
 
-            repository.updateChampionRecentBoost(summonerId = summonerFlow.value?.id!!, champId = champion.key, boost = recentBoost)
+      //      repository.updateChampionRecentBoost(summonerId = summonerFlow.value?.id!!, champId = champion.key, boost = recentBoost)
         }
-        repository.updateSummoner(summonerFlow.value?.copy(initBoostCalculated = true)!!)
+    //   repository.updateSummoner(summonerFlow.value?.copy(initBoostCalculated = true)!!)
     }
 
     private fun calculateExperienceBoost(introChamp: ChampItem): Int {
         if(introChamp.masteryPoints > 20000){
-            return when(summonerFlow.value?.rank){
+            return when(summonerFlow.value?.rank?.tier){
                 "IRON" -> 0
                 "BRONZE" -> 0
                 "SILVER" -> lpSeparation
@@ -146,20 +146,20 @@ class IntroChampViewModel @Inject constructor(
     }
 
     fun recentBoostReady(introChamp: ChampItem) = viewModelScope.launch {
-        val champion = repository.getChampion(champId = introChamp.id, summonerId = summonerFlow.value?.id!!)
-        val experienceBoost = if (champion?.rankInfo?.experienceBoost == null) {
-            val boost = calculateExperienceBoost(introChamp)
-            repository.updateChampionExperienceBoost(
-                summonerId = summonerFlow.value?.id!!,
-                champId = introChamp.id,
-                boost = boost
-            )
-            boost
-        } else {
-            champion.rankInfo.experienceBoost
-        }
-        introChampEventsChannel.send(IntroChampEvents.InitBoostReady((champion?.rankInfo?.recentBoost
-            ?: 0) + experienceBoost))
+//        val champion = repository.getChampion(champId = introChamp.id, summonerId = summonerFlow.value?.id!!)
+//        val experienceBoost = if (champion?.rankInfo?.experienceBoost == null) {
+//            val boost = calculateExperienceBoost(introChamp)
+//            repository.updateChampionExperienceBoost(
+//                summonerId = summonerFlow.value?.id!!,
+//                champId = introChamp.id,
+//                boost = boost
+//            )
+//            boost
+//        } else {
+//            champion.rankInfo?.experienceBoost ?: 0
+//        }
+//        introChampEventsChannel.send(IntroChampEvents.InitBoostReady((champion?.rankInfo?.recentBoost
+//            ?: 0) + experienceBoost))
     }
 
     suspend fun updateChampionRank(lp: Int, rankKey: Int, champId: Int) {

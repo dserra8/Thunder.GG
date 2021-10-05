@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".ui.auth.AuthFragment">
+
+
+    <data>
+
+        <variable
+            name="viewModel"
+            type="com.example.leagueapp1.ui.auth.AuthViewModel" />
+    </data>
+
+    <androidx.constraintlayout.motion.widget.MotionLayout
+        android:id="@+id/authContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/home_screen_drawable"
+        app:layoutDescription="@xml/auth_layout_scene2">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/loginContainer"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:background="@drawable/home_screen_drawable"
+            app:layout_constraintBottom_toTopOf="@id/registerContainer"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/loginTextLayout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/login_register_margin"
+            android:layout_marginEnd="@dimen/login_register_margin"
+            app:layout_constraintBottom_toTopOf="@+id/passwordTextLayout"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed"
+            app:startIconDrawable="@drawable/ic_person">
+
+            <AutoCompleteTextView
+                android:id="@+id/usernameTextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/username_text"
+                tools:text="daniel@abc.com" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/passwordTextLayout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/login_register_margin"
+            android:layout_marginEnd="@dimen/login_register_margin"
+            android:hint="@string/password_text"
+            app:counterEnabled="true"
+            app:endIconMode="password_toggle"
+            app:layout_constraintBottom_toTopOf="@+id/loginButton"
+            app:layout_constraintTop_toBottomOf="@+id/loginTextLayout"
+            app:startIconDrawable="@drawable/ic_lock">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/passwordTextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword"
+                tools:text="daniel@abc.com" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <Button
+            android:id="@+id/loginButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/login_register_button_margin"
+            android:layout_marginEnd="@dimen/login_register_button_margin"
+            android:background="@drawable/drawable_box_champ"
+            android:text="@string/login_text"
+            android:onClick="@{() -> viewModel.onLogin()}"
+            app:layout_constraintBottom_toBottomOf="@+id/loginContainer"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/passwordTextLayout" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/registerContainer"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/loginContainerHeight"
+            android:background="#7AA8EA"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/loginContainer">
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <ImageView
+            android:id="@+id/swipeUpArrowLeft"
+            android:layout_width="@dimen/loginContainerHeight"
+            android:layout_height="@dimen/loginContainerHeight"
+            android:src="@drawable/ic_arrow_up"
+            app:layout_constraintBottom_toBottomOf="@id/registerContainer"
+            app:layout_constraintEnd_toStartOf="@id/swipeUpTextView"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <ImageView
+            android:id="@+id/swipeUpArrowRight"
+            android:layout_width="@dimen/loginContainerHeight"
+            android:layout_height="@dimen/loginContainerHeight"
+            android:src="@drawable/ic_arrow_up"
+            app:layout_constraintBottom_toBottomOf="@+id/swipeUpTextView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/swipeUpTextView"
+            app:layout_constraintTop_toTopOf="@+id/swipeUpTextView" />
+
+        <TextView
+            android:id="@+id/swipeUpTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/make_account_text"
+            android:textAlignment="center"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@+id/swipeUpArrowLeft"
+            app:layout_constraintEnd_toStartOf="@+id/swipeUpArrowRight"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/swipeUpArrowLeft"
+            app:layout_constraintTop_toTopOf="@+id/swipeUpArrowLeft" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/registerSummonerTextLayout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/login_register_margin"
+            android:layout_marginEnd="@dimen/login_register_margin"
+            android:hint="@string/summoner_name_text"
+            app:counterEnabled="true"
+            app:layout_constraintBottom_toTopOf="@+id/registerUsernameTextLayout"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed"
+            app:startIconDrawable="@drawable/ic_person">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/registerSummonerTextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/registerUsernameTextLayout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/login_register_margin"
+            android:layout_marginEnd="@dimen/login_register_margin"
+            android:hint="@string/username_text"
+            app:counterEnabled="true"
+            app:layout_constraintBottom_toTopOf="@+id/registerPasswordTextLayout"
+            app:layout_constraintTop_toBottomOf="@+id/registerSummonerTextLayout"
+            app:startIconDrawable="@drawable/ic_person">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/registerUsernameTextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/registerPasswordTextLayout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/login_register_margin"
+            android:layout_marginEnd="@dimen/login_register_margin"
+            android:hint="@string/password_text"
+            app:counterEnabled="true"
+            app:endIconMode="password_toggle"
+            app:layout_constraintBottom_toTopOf="@+id/repeatPasswordTextLayout"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/registerUsernameTextLayout"
+            app:startIconDrawable="@drawable/ic_lock">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/registerPasswordTextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/repeatPasswordTextLayout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/login_register_margin"
+            android:layout_marginEnd="@dimen/login_register_margin"
+            android:hint="@string/repeat_password_text"
+            app:counterEnabled="true"
+            app:endIconMode="password_toggle"
+            app:layout_constraintBottom_toTopOf="@+id/registerButton"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/registerPasswordTextLayout"
+            app:startIconDrawable="@drawable/ic_lock">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/repeatPasswordTextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+
+        <Button
+            android:id="@+id/registerButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/login_register_button_margin"
+            android:layout_marginEnd="@dimen/login_register_button_margin"
+            android:background="@drawable/drawable_box_champ"
+            android:text="@string/register_text"
+            android:onClick="@{() -> viewModel.onRegister()}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/repeatPasswordTextLayout" />
+
+    </androidx.constraintlayout.motion.widget.MotionLayout>
+</layout>

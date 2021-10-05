@@ -1,10 +1,10 @@
 package com.example.leagueapp1.util
 
+import com.example.leagueapp1.data.local.*
+import com.example.leagueapp1.data.remote.ChampionRates
+import com.example.leagueapp1.data.remote.ParticipantData
+import com.example.leagueapp1.data.remote.Rate
 import com.example.leagueapp1.database.*
-import com.example.leagueapp1.network.ChampionRates
-import com.example.leagueapp1.network.ParticipantData
-import com.example.leagueapp1.network.RankDetails
-import com.example.leagueapp1.network.Rate
 
 fun createParticipantData(
     assists : Int = 1,
@@ -57,24 +57,30 @@ fun createChampionMastery(
     championLevel: Double = 1.0,
     championPoints: Double = 200.0,
     lastPlayTime : Double = 1000.0,
-    championPointsSinceLastLevel: Double = 10.0,
-    championPointsUntilNextLevel: Double = 100.0,
-    chestGranted : Boolean = false,
-    tokensEarned : Double = 10.0,
+//    championPointsSinceLastLevel: Double = 10.0,
+//    championPointsUntilNextLevel: Double = 100.0,
+//    chestGranted : Boolean = false,
+//    tokensEarned : Double = 10.0,
     summonerId : String = "0",
     champName : String = "Lux",
     timeReceived : Long = 10000,
     rankInfo : ChampRankInfo? = null,
-    roles : TrueRoles? = null
+    roles : TrueRoles = TrueRoles(
+        TOP = false,
+        JUNGLE = false,
+        MIDDLE = true,
+        BOTTOM = false,
+        UTILITY = true
+    )
 ) = ChampionMastery(
     championId = championId,
     championLevel = championLevel,
     championPoints = championPoints,
     lastPlayTime = lastPlayTime,
-    championPointsSinceLastLevel = championPointsSinceLastLevel,
-    championPointsUntilNextLevel = championPointsUntilNextLevel,
-    chestGranted = chestGranted,
-    tokensEarned = tokensEarned,
+//    championPointsSinceLastLevel = championPointsSinceLastLevel,
+//    championPointsUntilNextLevel = championPointsUntilNextLevel,
+//    chestGranted = chestGranted,
+//    tokensEarned = tokensEarned,
     summonerId = summonerId,
     champName = champName,
     timeReceived = timeReceived,
@@ -87,14 +93,14 @@ fun createSummonerProperties(
     accountId : String = "0",
     puuid : String = "0",
     name : String = "",
-    profileIconId : Double = 0.0,
-    revisionDate : Double = 0.0,
-    summonerLevel : Double = 0.0,
-    current : Boolean = false,
+    profileIconId : Int = 0,
+    revisionDate : Long = 0.0.toLong(),
+    summonerLevel : Long = 0.0.toLong(),
+ //   current : Boolean = false,
     timeReceived : Long = 0,
     initBoostCalculated : Boolean = false,
-    rank : String? = null,
-    status : Status? = null
+    rank : Rank? = null,
+  //  status : Status? = null
 
 ) = SummonerProperties(
     id = id,
@@ -104,9 +110,9 @@ fun createSummonerProperties(
     profileIconId = profileIconId,
     revisionDate = revisionDate,
     summonerLevel = summonerLevel,
-    current = current,
+ //   current = current,
     timeReceived = timeReceived,
     initBoostCalculated = initBoostCalculated,
     rank = rank,
-    status = status
+ //   status = status
 )

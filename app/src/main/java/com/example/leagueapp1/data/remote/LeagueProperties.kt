@@ -1,4 +1,4 @@
-package com.example.leagueapp1.network
+package com.example.leagueapp1.data.remote
 
 
 data class RankDetails(

@@ -2,7 +2,9 @@ package com.example.leagueapp1.util
 
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.leagueapp1.database.ChampionMastery
+import com.example.leagueapp1.data.local.Rank
+import com.example.leagueapp1.data.local.Status
+import com.example.leagueapp1.data.local.SummonerProperties
 import java.util.*
 
 val <T> T.exhaustive: T
@@ -48,3 +50,29 @@ fun formatSplashName(id: Int): String {
         else -> splashName
     }
 }
+
+fun createSummonerProperties(
+    id : String = "0",
+    accountId : String = "0",
+    puuid : String = "0",
+    name : String = "",
+    profileIconId : Int = 0,
+    revisionDate : Long = 0.0.toLong(),
+    summonerLevel : Long = 0.0.toLong(),
+    isMainSummoner: Boolean = false,
+    timeReceived : Long = 0,
+    initBoostCalculated : Boolean = false,
+    rank : Rank? = null,
+) = SummonerProperties(
+    id = id,
+    accountId = accountId,
+    puuid = puuid,
+    name = name,
+    profileIconId = profileIconId,
+    revisionDate = revisionDate,
+    summonerLevel = summonerLevel,
+    isMainSummoner = isMainSummoner,
+    timeReceived = timeReceived,
+    initBoostCalculated = initBoostCalculated,
+    rank = rank
+)

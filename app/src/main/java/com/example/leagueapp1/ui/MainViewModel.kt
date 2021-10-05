@@ -1,11 +1,10 @@
-package com.example.leagueapp1
+package com.example.leagueapp1.ui
 
 import androidx.lifecycle.*
 import com.example.leagueapp1.database.PreferencesManager
 import com.example.leagueapp1.repository.LeagueRepository
 import com.example.leagueapp1.repository.Repository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
@@ -41,7 +40,7 @@ class MainViewModel @Inject constructor(
     ){ summoner, champion ->
         Pair(summoner, champion)
     } .flatMapLatest { (summoner, champion) ->
-        repository.getHeaderInfo(summoner?.name ?: "No User", summoner?.profileIconId ?: 10.0, champion)
+        repository.getHeaderInfo(summoner?.name ?: "No User", summoner?.profileIconId ?: 10, champion)
     }
 
     @ExperimentalCoroutinesApi
@@ -77,12 +76,6 @@ class MainViewModel @Inject constructor(
         val data = preferencesFlow.first()
         isActive = data.isSummonerActive
     }
-
-
-    fun changeNavigationHeader(splashName: String) = viewModelScope.launch {
-
-    }
-
 
     sealed class MainActivityEvents{
         data class FirstTime(val name: String): MainActivityEvents()

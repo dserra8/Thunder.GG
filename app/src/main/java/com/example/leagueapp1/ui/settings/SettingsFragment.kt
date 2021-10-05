@@ -39,9 +39,6 @@ class SettingsFragment : Fragment() {
                 viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                     settingEvents.collect { event ->
                         when (event) {
-                            is SettingsViewModel.SettingsEvents.DeleteAllSummoners ->{
-                                Snackbar.make(requireView(), "All Summoners Deleted", Snackbar.LENGTH_SHORT).show()
-                            }
                             is SettingsViewModel.SettingsEvents.DeleteSummoner -> {
                                 DeleteSummonerDialogFragment().show(
                                     childFragmentManager, DeleteSummonerDialogFragment.TAG

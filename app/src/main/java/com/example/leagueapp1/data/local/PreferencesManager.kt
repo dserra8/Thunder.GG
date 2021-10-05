@@ -5,7 +5,9 @@ import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
+import com.example.leagueapp1.util.DispatcherProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import java.io.IOException
@@ -35,10 +37,18 @@ data class MainPreferences(
 )
 
 @Singleton
-class PreferencesManager @Inject constructor(@ApplicationContext val context: Context){
+class PreferencesManager @Inject constructor(
+    @ApplicationContext val context: Context,
+    private val dispatcher: DispatcherProvider ){
 
-    private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_preferences")
-    private val Context.dataMainActivity: DataStore<Preferences> by preferencesDataStore(name = "main_preferences")
+    private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
+        name = "user_preferences",
+        scope = CoroutineScope(dispatcher.io)
+    )
+    private val Context.dataMainActivity: DataStore<Preferences> by preferencesDataStore(
+        name = "main_preferences",
+        scope = CoroutineScope(dispatcher.io)
+    )
 
     val preferencesFlow = context.dataStore.data
         .catch { exception ->

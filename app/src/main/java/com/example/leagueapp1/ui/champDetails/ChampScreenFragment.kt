@@ -11,9 +11,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.RequestManager
 import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.example.leagueapp1.MainViewModel
+import com.example.leagueapp1.ui.MainViewModel
 import com.example.leagueapp1.R
-import com.example.leagueapp1.database.ChampionMastery
+import com.example.leagueapp1.data.local.ChampionMastery
 import com.example.leagueapp1.databinding.ChampScreenBinding
 import com.example.leagueapp1.util.Constants
 import com.example.leagueapp1.util.exhaustive

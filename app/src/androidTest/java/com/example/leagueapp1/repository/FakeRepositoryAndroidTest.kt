@@ -4,8 +4,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.leagueapp1.BuildConfig
 import com.example.leagueapp1.adapters.HeaderItem
-import com.example.leagueapp1.database.*
-import com.example.leagueapp1.network.*
+import com.example.leagueapp1.data.local.*
+import com.example.leagueapp1.data.remote.*
+import com.example.leagueapp1.data.remote.requests.SummonerFromKtor
+import com.example.leagueapp1.database.SortOrder
 import com.example.leagueapp1.repository.LeagueRepository.Companion.FRESH_TIMEOUT
 import com.example.leagueapp1.util.*
 import kotlinx.coroutines.flow.Flow
@@ -24,8 +26,10 @@ class FakeRepositoryAndroidTest @Inject constructor(
     private val summonerList = mutableListOf<SummonerProperties>()
     private val championRoleList = mutableListOf<ChampionRoleRates>()
 
-    private val serverSummonerList =
+    private val riotServerSummonerList =
         listOf("Chasik", "Kirokato", "itsjerez", "ChiTownsFinest", "MysticsJL")
+
+    private val ktorSummonerList = mutableListOf<SummonerFromKtor>()
 
     private val _observableChampionRoleList =
         MutableLiveData<List<ChampionRoleRates>>(championRoleList)
@@ -68,6 +72,53 @@ class FakeRepositoryAndroidTest @Inject constructor(
         return Result.success(response.body()!!)
     }
 
+    override suspend fun login(email: String, password: String): Resource<String> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun register(
+        email: String,
+        password: String,
+        summonerName: String
+    ): Resource<String> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun syncSummonerAndChamps() {
+        val localSummoner = getSummoner()
+        localSummoner?.let {
+            val addSummonerResponse = safeApiCall { api.addSummoner(it) }
+            val updatedSummonerResponse = safeApiCall { api.getMainSummoner() }
+            updatedSummonerResponse.onSuccess { summonerKtor ->
+                currentChampionList = summonerKtor.championList
+                summonerKtor.apply {
+                    insertSummoner(
+                        SummonerProperties(
+                            id = id,
+                            accountId = accountId,
+                            puuid = puuid,
+                            name = name,
+                            profileIconId = profileIconId,
+                            revisionDate = revisionDate,
+                            summonerLevel = summonerLevel,
+                            isMainSummoner = true,
+                            rank = rank
+                        )
+                    )
+                    currentChampionList?.let { champs ->
+                        insertChampions(champs)
+                    }
+                }
+
+            }
+        }
+    }
+
+    private fun getSummoner(): SummonerProperties? {
+        return summonerList.find { it.isMainSummoner }
+    }
+
+
 
     /**
      * Summoner Functions
@@ -84,13 +135,13 @@ class FakeRepositoryAndroidTest @Inject constructor(
         } else {
             val name = url.substringBefore("?").substringAfterLast("/")
             val response: Response<SummonerProperties>
-            if (serverSummonerList.contains(name)) {
+            if (riotServerSummonerList.contains(name)) {
                 val summoner = createSummonerProperties(
                     id = id.toString(),
                     accountId = id.toString(),
                     puuid = id.toString(),
                     name = name,
-                    summonerLevel = 10.0,
+                    summonerLevel = 10,
                 )
                 id++
                 response = Response.success(summoner)
@@ -109,22 +160,28 @@ class FakeRepositoryAndroidTest @Inject constructor(
     }
 
     override suspend fun insertSummoner(summoner: SummonerProperties) {
+        val doesExist = summonerList.find { it.id == summoner.id }
+        if( doesExist != null) {
+            summonerList[summonerList.indexOf(doesExist)] = summoner
+            return
+        }
         summonerList.add(summoner)
+
     }
 
     override fun getSummonerFlow(): Flow<SummonerProperties?> = flow {
         for (summoner in summonerList) {
-            if (summoner.current) {
-                emit(summoner)
-            }
+//            if (summoner.current) {
+//                emit(summoner)
+//            }
         }
     }
 
     override suspend fun getCurrentSummoner(): SummonerProperties? {
         for (summoner in summonerList) {
-            if (summoner.current) {
-                return summoner
-            }
+//            if (summoner.current) {
+//                return summoner
+//            }
         }
         return null
     }
@@ -181,58 +238,58 @@ class FakeRepositoryAndroidTest @Inject constructor(
     private suspend fun checkSummonerFreshness(summonerName: String): Boolean {
         val summoner = getSummonerByName(summonerName)
         if (summoner != null) {
-            return summoner.timeReceived >= (System.currentTimeMillis() - FRESH_TIMEOUT)
+            return summoner.timeReceived!! >= (System.currentTimeMillis() - FRESH_TIMEOUT)
         }
         return false
     }
 
     override suspend fun refreshSummoner(summonerName: String): Exception? {
-        val isFreshSummoner = checkSummonerFreshness(summonerName)
-        if (!isFreshSummoner) {
-            val response =
-                safeApiCall { getSummonerPropertiesAsync("${Constants.SUMMONER_INFO}$summonerName?api_key=${BuildConfig.API_KEY}") }
-            response.onSuccess { summoner ->
-                val rankListResponse = getSummonerSoloRank(summoner.id)
-                var rank: String? = null
-                when (rankListResponse) {
-                    is Resource.Error -> {
-                        return Exception(rankListResponse.error)
-                    }
-                    is Resource.Loading -> {
-                        return Exception("Error while loading Summoner rank list")
-                    }
-                    is Resource.Success -> {
-                        val rankList = rankListResponse.data!!
-                        if (rankList.isNotEmpty()) {
-                            for (obj in rankList) {
-                                when (obj.queueType) {
-                                    "RANKED_SOLO_5x5" -> {
-                                        rank = obj.tier
-                                        break
-                                    }
-                                }
-                            }
-                        }
-                        val updatedSummoner =
-                            summoner.copy(timeReceived = System.currentTimeMillis(), rank = rank)
-                        insertSummoner(updatedSummoner)
-                        return null
-                    }
-                }
-            }
-            response.onFailure {
-                return Exception("Summoner Not Found")
-            }
-        }
+//        val isFreshSummoner = checkSummonerFreshness(summonerName)
+//        if (!isFreshSummoner) {
+//            val response =
+//                safeApiCall { getSummonerPropertiesAsync("${Constants.SUMMONER_INFO}$summonerName?api_key=${BuildConfig.API_KEY}") }
+//            response.onSuccess { summoner ->
+//                val rankListResponse = getSummonerSoloRank(summoner.id)
+//                var rank: String? = null
+//                when (rankListResponse) {
+//                    is Resource.Error -> {
+//                        return Exception(rankListResponse.error)
+//                    }
+//                    is Resource.Loading -> {
+//                        return Exception("Error while loading Summoner rank list")
+//                    }
+//                    is Resource.Success -> {
+//                        val rankList = rankListResponse.data!!
+//                        if (rankList.isNotEmpty()) {
+//                            for (obj in rankList) {
+//                                when (obj.queueType) {
+//                                    "RANKED_SOLO_5x5" -> {
+//                                        rank = obj.tier
+//                                        break
+//                                    }
+//                                }
+//                            }
+//                        }
+//                        val updatedSummoner =
+//                            summoner.copy(timeReceived = System.currentTimeMillis(), rank = rank)
+//                        insertSummoner(updatedSummoner)
+//                        return null
+//                    }
+//                }
+//            }
+//            response.onFailure {
+//                return Exception("Summoner Not Found")
+//            }
+//        }
         return null
     }
 
     override suspend fun updateSummonerList(summonerID: String) {
         val summonerList = getAllSummoners().first()
-        for (summoner in summonerList) {
-            summoner.current = summoner.id == summonerID
-            updateSummoner(summoner)
-        }
+//        for (summoner in summonerList) {
+//            summoner.current = summoner.id == summonerID
+//            updateSummoner(summoner)
+//        }
     }
 
     override suspend fun getSummonerSoloRank(summonerId: String): Resource<List<RankDetails>?> {
@@ -544,6 +601,10 @@ class FakeRepositoryAndroidTest @Inject constructor(
         return list
     }
 
+    override suspend fun insertChampions(champs: List<ChampionMastery>) {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun getChampion(champId: Int, summonerId: String): ChampionMastery? {
         for (champ in championList) {
             if (champ.championId == champId && champ.summonerId == summonerId) {
@@ -604,7 +665,7 @@ class FakeRepositoryAndroidTest @Inject constructor(
 
     override fun getHeaderInfo(
         name: String,
-        profileIconId: Double,
+        profileIconId: Int,
         champion: LeagueRepository.ChampListState
     ): Flow<HeaderItem> {
         return flow {

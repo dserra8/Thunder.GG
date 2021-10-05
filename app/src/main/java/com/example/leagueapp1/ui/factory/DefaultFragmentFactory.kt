@@ -1,4 +1,4 @@
-package com.example.leagueapp1.ui
+package com.example.leagueapp1.ui.factory
 
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentFactory

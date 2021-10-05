@@ -34,7 +34,6 @@
             android:text="@string/delete_all_summoners_text"
             android:textColor="@color/colorOfAllTexts"
             android:textAlignment="viewStart"
-            android:onClick="@{() -> viewModel.onDeleteAllSummonerClick()}"
             app:icon="@drawable/ic_delete_outline"
             style='?attr/materialButtonOutlinedStyle'/>
     </LinearLayout>

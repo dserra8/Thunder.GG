@@ -2,7 +2,7 @@ package com.example.leagueapp1.ui.champDetails
 
 import androidx.lifecycle.*
 import com.example.leagueapp1.adapters.ChampItem
-import com.example.leagueapp1.database.ChampionMastery
+import com.example.leagueapp1.data.local.ChampionMastery
 import com.example.leagueapp1.repository.LeagueRepository
 import com.example.leagueapp1.util.DispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel

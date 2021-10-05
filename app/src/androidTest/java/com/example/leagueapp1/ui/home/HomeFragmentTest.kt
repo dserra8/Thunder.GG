@@ -35,7 +35,7 @@ class HomeFragmentTest {
     @Test
     fun clickOnSubmit_navigateToListChampFragment() {
         val navController = mock(NavController::class.java)
- //       val navController = mockk<NavController>()
+       // val navController = mockk<NavController>()
         launchFragmentInHiltContainer<HomeFragment> {
             Navigation.setViewNavController(requireView(), navController)
         }

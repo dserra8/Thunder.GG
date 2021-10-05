@@ -15,7 +15,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
-import com.example.leagueapp1.MainViewModel
+import com.example.leagueapp1.ui.MainViewModel
 import com.example.leagueapp1.R
 import com.example.leagueapp1.databinding.HomeBinding
 import com.example.leagueapp1.util.exhaustive

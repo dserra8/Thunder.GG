@@ -1,7 +1,8 @@
-package com.example.leagueapp1.database
+package com.example.leagueapp1.data.local
 
 import androidx.lifecycle.LiveData
 import androidx.room.*
+import com.example.leagueapp1.database.SortOrder
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -10,13 +11,10 @@ interface SummonersDao {
     @Query("SELECT * FROM summoners")
     fun getAllSummoners(): Flow<List<SummonerProperties>>
 
-    @Update
-    suspend fun update(summoner: SummonerProperties)
-
-    @Query("SELECT * FROM summoners WHERE current=1")
+    @Query("SELECT * FROM summoners")
     fun getSummonerFlow(): Flow<SummonerProperties?>
 
-    @Query("SELECT * FROM summoners WHERE current=1")
+    @Query("SELECT * FROM summoners WHERE isMainSummoner=1")
     suspend fun getSummoner(): SummonerProperties?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -25,7 +23,7 @@ interface SummonersDao {
     @Query("DELETE FROM summoners")
     suspend fun deleteAllSummoners()
 
-    @Query("DELETE FROM summoners WHERE current=1")
+    @Query("DELETE FROM summoners")
     suspend fun deleteCurrentSummoner()
 
     @Query("SELECT COUNT(*) FROM summoners WHERE name=:summonerName AND timeReceived >=:time")
@@ -93,12 +91,6 @@ interface ChampionsDao {
 
     @Query("SELECT COUNT(*) FROM summonerChampions WHERE summonerId=:summonerId AND timeReceived >=:time")
     suspend fun isFreshSummonerChampions(summonerId: String, time: Long): Int
-
-    @Query("UPDATE summonerChampions SET recentBoost=:boost WHERE summonerId=:summonerId AND championId=:champId")
-    suspend fun updateChampionRecentBoost(summonerId: String, champId: Int, boost: Int)
-
-    @Query("UPDATE summonerChampions SET experienceBoost=:boost WHERE summonerId=:summonerId AND championId=:champId")
-    suspend fun updateChampionExperienceBoost(summonerId: String, champId: Int, boost: Int)
 
     @Query( "UPDATE summonerChampions SET lp=:lp, rank=:rank WHERE summonerId=:summonerId AND championId=:champId")
     suspend fun updateChampionRank(summonerId: String, champId: Int, lp: Int, rank: String)

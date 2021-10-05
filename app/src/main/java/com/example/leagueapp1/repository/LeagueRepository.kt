@@ -2,10 +2,14 @@ package com.example.leagueapp1.repository
 
 import androidx.lifecycle.LiveData
 import com.example.leagueapp1.adapters.HeaderItem
-import com.example.leagueapp1.database.*
-import com.example.leagueapp1.network.ChampionRoles
-import com.example.leagueapp1.network.MatchDetails
-import com.example.leagueapp1.network.RankDetails
+import com.example.leagueapp1.data.local.ChampionMastery
+import com.example.leagueapp1.data.local.ChampionRoleRates
+import com.example.leagueapp1.data.local.SummonerProperties
+import com.example.leagueapp1.data.remote.ChampionRoles
+import com.example.leagueapp1.data.remote.MatchDetails
+import com.example.leagueapp1.data.remote.RankDetails
+import com.example.leagueapp1.data.remote.requests.SummonerFromKtor
+import com.example.leagueapp1.database.SortOrder
 import com.example.leagueapp1.util.Constants
 import com.example.leagueapp1.util.Resource
 import kotlinx.coroutines.flow.Flow
@@ -14,13 +18,20 @@ import java.util.concurrent.TimeUnit
 
 interface LeagueRepository {
 
+    suspend fun login(email: String, password: String): Resource<String>
+
+    suspend fun register(email: String, password: String, summonerName: String): Resource<String>
+
+    suspend fun syncSummonerAndChamps()
     /**
      * Network and Database Functions for SummonerProperties
      */
 
     val summoner: Flow<SummonerProperties?>
 
-    suspend fun getSummonerPropertiesAsync(url: String): Response<SummonerProperties>
+    var currentSummoner: SummonerProperties?
+
+    suspend fun transformSummonerObject(summoner: SummonerProperties): SummonerFromKtor
 
     fun getAllSummoners(): Flow<List<SummonerProperties>>
 
@@ -28,21 +39,7 @@ interface LeagueRepository {
 
     fun getSummonerFlow(): Flow<SummonerProperties?>
 
-    suspend fun getCurrentSummoner(): SummonerProperties?
-
-    suspend fun updateSummoner(summoner: SummonerProperties)
-
-    suspend fun deleteCurrentSummonerAndChampions()
-
     suspend fun getSummonerByName(summonerName: String): SummonerProperties?
-
-    suspend fun checkAndReturnSummoner(summonerName: String): Resource<SummonerProperties>
-
-    suspend fun refreshSummoner(summonerName: String): Exception?
-
-    suspend fun updateSummonerList(summonerID: String)
-
-    suspend fun getSummonerSoloRank(summonerId: String): Resource<List<RankDetails>?>
 
     /**
      * Network and Database Functions for Champion Roles
@@ -75,11 +72,9 @@ interface LeagueRepository {
         object Empty : ChampListState()
     }
 
+    suspend fun insertChampions(champs: List<ChampionMastery>)
+
     suspend fun getChampion(champId: Int, summonerId: String): ChampionMastery?
-
-    suspend fun updateChampionRecentBoost(summonerId: String, champId: Int, boost: Int)
-
-    suspend fun updateChampionExperienceBoost(summonerId: String, champId: Int, boost: Int)
 
     suspend fun updateChampionRank(summonerId: String, champId: Int, lp: Int, rank: Constants.Ranks)
 
@@ -87,11 +82,9 @@ interface LeagueRepository {
 
     fun getHeaderInfo(
         name: String,
-        profileIconId: Double,
+        profileIconId: Int,
         champion: ChampListState
     ): Flow<HeaderItem>
-
-    suspend fun getAllChampionMasteries(url: String): Resource<List<ChampionMastery>?>
 
     fun getChampions(
         searchQuery: String,
@@ -104,11 +97,4 @@ interface LeagueRepository {
         showAll: Boolean
     ): Flow<Resource<List<ChampionMastery>>>
 
-    /**
-     * Network and database functions relating to League Matches
-     */
-
-    suspend fun matchListForInitBoost(): Resource<List<String>?>
-
-    suspend fun getMatchDetails(matchId: String): Resource<MatchDetails>
 }

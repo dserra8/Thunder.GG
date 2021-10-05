@@ -3,11 +3,11 @@ package com.example.lBeagueapp1.ListChamp
 import androidx.lifecycle.*
 import androidx.navigation.NavDirections
 import com.example.leagueapp1.adapters.ChampItem
-import com.example.leagueapp1.database.ChampionMastery
+import com.example.leagueapp1.data.local.ChampionMastery
 import com.example.leagueapp1.database.PreferencesManager
 import com.example.leagueapp1.database.SortOrder
-import com.example.leagueapp1.ui.listChamp.ListChampFragmentDirections
 import com.example.leagueapp1.repository.LeagueRepository
+import com.example.leagueapp1.ui.listChamp.ListChampFragmentDirections
 import com.example.leagueapp1.util.filterChampionName
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -25,8 +25,6 @@ class ListChampViewModel @Inject constructor(
     private val preferencesManager: PreferencesManager,
     private val state: SavedStateHandle
 ) : ViewModel() {
-
-    private var transitioned = false
 
     private var navigatedFromOtherScreen: Boolean = false
 
@@ -88,7 +86,7 @@ class ListChampViewModel @Inject constructor(
 
     fun onClickChamp(champ: ChampItem) = viewModelScope.launch {
             val champion =
-                getCurrentSummoner()?.let { repository.getChampion(champ.id, summonerId = it.id) }
+                repository.currentSummoner?.let { repository.getChampion(champ.id, summonerId = it.id) }
             val action = if (champion?.rankInfo?.rank ?: "NONE" == "NONE") {
                 ListChampFragmentDirections.actionListChampFragmentToIntroChampFragment(champ)
             } else {
@@ -140,9 +138,6 @@ class ListChampViewModel @Inject constructor(
     fun floatingActionButtonClicked() = viewModelScope.launch {
         championListEventsChannel.send(ChampListEvents.GoTopOfList)
     }
-
-    private suspend fun getCurrentSummoner() =
-        repository.getCurrentSummoner()
 
     sealed class ChampListEvents {
         data class NavigateToChampScreen(val action: NavDirections) : ChampListEvents()
