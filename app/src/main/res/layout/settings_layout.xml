@@ -36,5 +36,15 @@
             android:textAlignment="viewStart"
             app:icon="@drawable/ic_delete_outline"
             style='?attr/materialButtonOutlinedStyle'/>
+
+        <Button
+            android:id="@+id/logoutButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/logout_text"
+            android:textColor="@color/primaryColor"
+            android:textAlignment="center"
+            android:onClick="@{() -> viewModel.onLogout()}"
+            style='?attr/materialButtonOutlinedStyle'/>
     </LinearLayout>
 </layout>

@@ -8,8 +8,9 @@ import androidx.test.filters.SmallTest
 import app.cash.turbine.test
 import com.example.leagueapp1.data.local.*
 import com.example.leagueapp1.getOrAwaitValue
+import com.example.leagueapp1.util.Constants.MILLI_SECONDS_DAY
 import com.example.leagueapp1.util.createChampionMastery
-import com.example.leagueapp1.util.createSummonerProperties
+import com.example.leagueapp1.util.createSummonerPropertiesTest
 import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -52,19 +53,19 @@ class SummonerDaoTest {
     fun setup() {
         hiltRule.inject()
         summonersDao = database.summonersDao()
-        summoner1 = createSummonerProperties(
+        summoner1 = createSummonerPropertiesTest(
             id = "1",
             accountId = "1",
             puuid = "1",
             name = "Kate",
         )
-        summoner2 = createSummonerProperties(
+        summoner2 = createSummonerPropertiesTest(
             id = "2",
             accountId = "2",
             puuid = "2",
             name = "Katie",
         )
-        summoner3 = createSummonerProperties(
+        summoner3 = createSummonerPropertiesTest(
             id = "3",
             accountId = "3",
             puuid = "3",
@@ -83,17 +84,6 @@ class SummonerDaoTest {
         val verifySummoner = summonersDao.getSummonerByName("Kate")
         assertThat(verifySummoner).isEqualTo(summoner1)
     }
-
-    @Test
-    fun updateSummoner() = runBlockingTest {
-
-        val updatedSummoner = summoner1.copy(summonerLevel = 1100, profileIconId = 333)
-        summonersDao.insertSummoner(summoner1)
-        summonersDao.update(updatedSummoner)
-        val verifySummoner = summonersDao.getSummonerByName("Kate")
-        assertThat(verifySummoner).isEqualTo(updatedSummoner)
-    }
-
 
     @Test
     fun getAllSummoners() = runBlockingTest {
@@ -140,31 +130,31 @@ class SummonerDaoTest {
     @Test
     fun isFreshSummoner() = runBlockingTest {
         summoner1 =
-            createSummonerProperties(
+            createSummonerPropertiesTest(
                 id = "1",
                 accountId = "1",
                 puuid = "1",
                 name = "Kate",
-                timeReceived = 100.toLong()
+                timeReceived = 1633481485911
             )
         summoner2 =
-            createSummonerProperties(
+            createSummonerPropertiesTest(
                 id = "1",
                 accountId = "1",
                 puuid = "1",
                 name = "Katie",
-                timeReceived = 150.toLong()
+                timeReceived = 9
             )
 
         summonersDao.insertSummoner(summoner1)
         summonersDao.insertSummoner(summoner2)
 
-        val time: Long = 120
-        val time2: Long = 100
+        val currentTime = System.currentTimeMillis()
+        val time2 = 1633485187381
 
-        assertThat(summonersDao.isFreshSummoner("Kate", time)).isEqualTo(0)
-        assertThat(summonersDao.isFreshSummoner("Kate", time2)).isEqualTo(0)
-        assertThat(summonersDao.isFreshSummoner("Katie", time)).isEqualTo(1)
+        assertThat(summonersDao.isFreshSummoner("Kate", currentTime - MILLI_SECONDS_DAY)).isEqualTo(0)
+        assertThat(summonersDao.isFreshSummoner("Kate", time2 - MILLI_SECONDS_DAY)).isEqualTo(0)
+    //    assertThat(summonersDao.isFreshSummoner("Katie", time)).isEqualTo(1)
     }
 }
 
@@ -258,7 +248,7 @@ class ChampionDaoTest {
         ).first()
         val listOnlyName = mutableListOf<String>()
         for (item in listByName) {
-            listOnlyName.add(item.champName)
+            listOnlyName.add(item.champName!!)
         }
         assertThat(listOnlyName).isInOrder()
 
@@ -282,7 +272,7 @@ class ChampionDaoTest {
                 .first()
         val listOnlyName = mutableListOf<String>()
         for (item in list) {
-            listOnlyName.add(item.champName)
+            listOnlyName.add(item.champName!!)
         }
         assertThat(listOnlyName).isInOrder()
     }
@@ -330,8 +320,6 @@ class ChampionDaoTest {
         val verify = championsDao.getChampion(champion1.championId, champion1.summonerId)
         val champ2 = createChampionMastery(
             champName = "",
-            timeReceived = null,
-
         )
         assertThat(verify).isEqualTo(champion1)
     }
@@ -371,138 +359,6 @@ class ChampionDaoTest {
             showAll = true
         ).first()
         assertThat(verify).isEmpty()
-    }
-
-    @Test
-    fun deleteSummonerChampions() = runBlockingTest {
-        val champion5 = ChampionMastery(
-            championId = 1,
-            championLevel = 1.0,
-            championPoints = 200.0,
-            lastPlayTime = 1000.0,
-            summonerId = "1234",
-            champName = "Lux",
-            timeReceived = 10000,
-            rankInfo = null,
-            roles = TrueRoles(
-                TOP = false,
-                JUNGLE = false,
-                MIDDLE = true,
-                BOTTOM = false,
-                UTILITY = true
-            )
-        )
-        championsDao.insertChampion(champion5)
-        val list = listOf(champion1, champion2, champion3, champion4)
-        championsDao.insertChampionList(list)
-        championsDao.deleteSummonerChampions("123")
-        val verifyDeletedChamps = championsDao.getChampions(
-            query = "",
-            SortOrder.BY_MASTERY_POINTS,
-            "123",
-            showADC = false,
-            showSup = false,
-            showMid = false,
-            showJungle = false,
-            showTop = false,
-            showAll = true
-        ).first()
-        val verifyOtherSummonerChamps = championsDao.getChampions(
-            query = "",
-            SortOrder.BY_MASTERY_POINTS,
-            "1234",
-            showADC = false,
-            showSup = false,
-            showMid = false,
-            showJungle = false,
-            showTop = false,
-            showAll = true
-        ).first()
-        assertThat(verifyDeletedChamps).isEmpty()
-        assertThat(verifyOtherSummonerChamps).containsExactly(champion5)
-    }
-
-    @Test
-    fun isFreshSummonerChampions() = runBlockingTest {
-        val champion5 = createChampionMastery(
-            championId = 1,
-            championPoints = 200.0,
-            lastPlayTime = 1000.0,
-            summonerId = "1234",
-            champName = "Lux",
-        )
-        championsDao.insertChampion(champion5)
-        val time: Long = 10500
-        val time2: Long = 9000
-        val time3: Long = 10000
-        assertThat(championsDao.isFreshSummonerChampions("1234", time)).isEqualTo(0)
-        assertThat(championsDao.isFreshSummonerChampions("1234", time2)).isEqualTo(1)
-        assertThat(championsDao.isFreshSummonerChampions("1234", time3)).isEqualTo(1)
-    }
-
-//    @Test
-//    fun updateChampionRecentBoost() = runBlockingTest {
-//        val champion5 = createChampionMastery(
-//            championId = 1,
-//            championPoints = 200.0,
-//            summonerId = "1234",
-//            champName = "Lux",
-//            rankInfo = ChampRankInfo(
-//                recentBoost = 100,
-//                experienceBoost = 20,
-//                lp = 0,
-//                rank = "Iron"
-//            ),
-//        )
-//        championsDao.insertChampion(champion5)
-//        championsDao.updateChampionRecentBoost("1234", 1, 200)
-//        val verify = championsDao.getChampion(1, "1234")?.rankInfo?.recentBoost
-//        assertThat(verify).isEqualTo(200)
-//    }
-
-
-    @Test
-    fun updateChampionExperienceBoost() = runBlockingTest {
-        val champion5 = createChampionMastery(
-            championId = 1,
-            championPoints = 200.0,
-            summonerId = "1234",
-            champName = "Lux",
-            rankInfo = ChampRankInfo(
-                recentBoost = 100,
-                experienceBoost = 20,
-                lp = 0,
-                rank = "Iron"
-            )
-        )
-        championsDao.insertChampion(champion5)
-        championsDao.updateChampionExperienceBoost("1234", 1, 200)
-        val verify = championsDao.getChampion(1, "1234")?.rankInfo?.experienceBoost
-        assertThat(verify).isEqualTo(200)
-    }
-
-    @Test
-    fun updateChampionRank() = runBlockingTest {
-        val champion5 = createChampionMastery(
-            championId = 1,
-            championPoints = 200.0,
-            summonerId = "1234",
-            champName = "Lux",
-            rankInfo = ChampRankInfo(
-                recentBoost = 100,
-                experienceBoost = 20,
-                lp = 0,
-                rank = "Iron"
-            ),
-        )
-        championsDao.insertChampion(champion5)
-        championsDao.updateChampionRank("1234", 1, 20, "Gold")
-        val champ = championsDao.getChampion(1, "1234")
-        val verifyLp = champ?.rankInfo?.experienceBoost
-        val verifyRank = champ?.rankInfo?.rank
-
-        assertThat(verifyLp).isEqualTo(20)
-        assertThat(verifyRank).isEqualTo("Gold")
     }
 
     @Test

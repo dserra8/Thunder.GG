@@ -6,14 +6,11 @@ import com.example.leagueapp1.data.local.ChampionMastery
 import com.example.leagueapp1.data.local.ChampionRoleRates
 import com.example.leagueapp1.data.local.SummonerProperties
 import com.example.leagueapp1.data.remote.ChampionRoles
-import com.example.leagueapp1.data.remote.MatchDetails
-import com.example.leagueapp1.data.remote.RankDetails
 import com.example.leagueapp1.data.remote.requests.SummonerFromKtor
-import com.example.leagueapp1.database.SortOrder
+import com.example.leagueapp1.data.local.SortOrder
 import com.example.leagueapp1.util.Constants
 import com.example.leagueapp1.util.Resource
 import kotlinx.coroutines.flow.Flow
-import retrofit2.Response
 import java.util.concurrent.TimeUnit
 
 interface LeagueRepository {
@@ -27,8 +24,6 @@ interface LeagueRepository {
      * Network and Database Functions for SummonerProperties
      */
 
-    val summoner: Flow<SummonerProperties?>
-
     var currentSummoner: SummonerProperties?
 
     suspend fun transformSummonerObject(summoner: SummonerProperties): SummonerFromKtor
@@ -37,9 +32,9 @@ interface LeagueRepository {
 
     suspend fun insertSummoner(summoner: SummonerProperties)
 
-    fun getSummonerFlow(): Flow<SummonerProperties?>
+    suspend fun changeMainSummoner(puuid: String)
 
-    suspend fun getSummonerByName(summonerName: String): SummonerProperties?
+    suspend fun retrieveSaveSummoner()
 
     /**
      * Network and Database Functions for Champion Roles

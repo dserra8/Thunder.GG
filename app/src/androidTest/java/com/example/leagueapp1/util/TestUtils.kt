@@ -83,12 +83,11 @@ fun createChampionMastery(
 //    tokensEarned = tokensEarned,
     summonerId = summonerId,
     champName = champName,
-    timeReceived = timeReceived,
     rankInfo = rankInfo,
     roles = roles
 )
 
-fun createSummonerProperties(
+fun createSummonerPropertiesTest(
     id : String = "0",
     accountId : String = "0",
     puuid : String = "0",
@@ -96,12 +95,9 @@ fun createSummonerProperties(
     profileIconId : Int = 0,
     revisionDate : Long = 0.0.toLong(),
     summonerLevel : Long = 0.0.toLong(),
- //   current : Boolean = false,
     timeReceived : Long = 0,
-    initBoostCalculated : Boolean = false,
     rank : Rank? = null,
-  //  status : Status? = null
-
+    isMainSummoner: Boolean = false
 ) = SummonerProperties(
     id = id,
     accountId = accountId,
@@ -110,9 +106,7 @@ fun createSummonerProperties(
     profileIconId = profileIconId,
     revisionDate = revisionDate,
     summonerLevel = summonerLevel,
- //   current = current,
     timeReceived = timeReceived,
-    initBoostCalculated = initBoostCalculated,
     rank = rank,
- //   status = status
+    isMainSummoner = isMainSummoner
 )

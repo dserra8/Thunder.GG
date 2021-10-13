@@ -9,19 +9,11 @@
         android:id="@+id/homeFragment"
         android:name="com.example.leagueapp1.ui.home.HomeFragment"
         android:label="Thunder.GG"
-        tools:layout="@layout/home" >
-        <action
-            android:id="@+id/action_homeFragment_to_listChampFragment"
-            app:destination="@id/listChampFragment"
-            app:enterAnim="@anim/from_right"
-            app:exitAnim="@anim/to_left"
-            app:popEnterAnim="@anim/from_left"
-            app:popExitAnim="@anim/to_right" />
-    </fragment>
+        tools:layout="@layout/home" />
     <fragment
         android:id="@+id/listChampFragment"
         android:name="com.example.leagueapp1.ui.listChamp.ListChampFragment"
-        android:label="list_champs"
+        android:label="Champions"
         tools:layout="@layout/list_champs" >
         <action
             android:id="@+id/action_listChampFragment_to_champScreenFragment"
@@ -30,54 +22,49 @@
             app:exitAnim="@anim/to_left"
             app:popEnterAnim="@anim/from_left"
             app:popExitAnim="@anim/to_right" />
-        <action
-            android:id="@+id/action_listChampFragment_to_introChampFragment"
-            app:destination="@id/introChampFragment"
-            app:enterAnim="@anim/from_right"
-            app:exitAnim="@anim/to_left"
-            app:popEnterAnim="@anim/from_left"
-            app:popExitAnim="@anim/to_right" />
     </fragment>
     <fragment
         android:id="@+id/champScreenFragment"
         android:name="com.example.leagueapp1.ui.champDetails.ChampScreenFragment"
-        android:label="champ_screen"
         tools:layout="@layout/champ_screen" >
         <argument
             android:name="championPicked"
             app:argType="com.example.leagueapp1.adapters.ChampItem" />
         <action
             android:id="@+id/action_champScreenFragment_to_listChampFragment"
-            app:destination="@id/listChampFragment" />
-    </fragment>
-    <fragment
-        android:id="@+id/introChampFragment"
-        android:name="com.example.leagueapp1.ui.champDetails.IntroChampFragment"
-        android:label="Initial Rank"
-        tools:layout="@layout/intro_champ_layout" >
-        <argument
-            android:name="introChampionPicked"
-            app:argType="com.example.leagueapp1.adapters.ChampItem" />
-        <action
-            android:id="@+id/action_introChampFragment_to_champScreenFragment"
-            app:destination="@id/champScreenFragment"
-            app:enterAnim="@anim/fade_in"
-            app:exitAnim="@anim/fade_out"
-            app:popUpTo="@id/listChampFragment" />
+            app:destination="@id/listChampFragment"
+            app:popUpTo="@id/listChampFragment"
+            app:popUpToInclusive="true" />
     </fragment>
     <fragment
         android:id="@+id/settingsFragment"
         android:name="com.example.leagueapp1.ui.settings.SettingsFragment"
         android:label="Settings"
-        tools:layout="@layout/settings_layout" />
+        tools:layout="@layout/settings_layout" >
+        <action
+            android:id="@+id/action_settingsFragment_to_authFragment"
+            app:destination="@id/authFragment"
+            app:enterAnim="@anim/from_right"
+            app:exitAnim="@anim/to_left"
+            app:popEnterAnim="@anim/from_left"
+            app:popExitAnim="@anim/to_right"
+            app:popUpTo="@+id/nav_graph"
+            app:popUpToInclusive="true" />
+    </fragment>
     <fragment
         android:id="@+id/authFragment"
         android:name="com.example.leagueapp1.ui.auth.AuthFragment"
-        android:label="auth_layout"
+        android:label="Login/Register"
         tools:layout="@layout/auth_layout" >
         <action
             android:id="@+id/action_authFragment_to_listChampFragment"
-            app:destination="@id/listChampFragment" />
+            app:destination="@id/listChampFragment"
+            app:enterAnim="@anim/from_right"
+            app:exitAnim="@anim/to_left"
+            app:popEnterAnim="@anim/from_left"
+            app:popExitAnim="@anim/to_right"
+            app:popUpTo="@id/authFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
 </navigation>

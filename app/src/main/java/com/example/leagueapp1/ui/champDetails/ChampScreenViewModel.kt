@@ -18,9 +18,10 @@ class ChampScreenViewModel @Inject constructor(
     private val dispatchers: DispatcherProvider
 ) : ViewModel() {
 
-    val summonerFlow = repository.summoner.asLiveData()
+//    val summonerFlow = repository.summoner.asLiveData()
+    val summoner = repository.currentSummoner
 
-    private val champItem = state.get<ChampItem>("championPicked")
+    //private val champItem = state.get<ChampItem>("championPicked")
 
     //Live Data for LP text
     private val _lpText = MutableLiveData<Int>()
@@ -34,9 +35,11 @@ class ChampScreenViewModel @Inject constructor(
     val champScreenEvents = champScreenEventsChannel.receiveAsFlow()
 
     fun summonerReady(championId: Int) = viewModelScope.launch {
-        val champ = repository.getChampion(summonerId = summonerFlow.value?.id!!, champId = championId)
-        if(champ != null)
-            champScreenEventsChannel.send(ChampScreenEvents.ChampReady(champ))
+        summoner?.let {
+            val champ = repository.getChampion(summonerId = summoner.id, champId = championId)
+            if (champ != null)
+                champScreenEventsChannel.send(ChampScreenEvents.ChampReady(champ))
+        }
     }
 
     fun updateLpText(lp: Int) {

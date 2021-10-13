@@ -65,89 +65,15 @@ class HomeViewModel @Inject constructor(
 
     fun submitIsClicked() {
         viewModelScope.launch {
-            _summonerProperties.value = repository.checkAndReturnSummoner(_summonerName)
+
         }
     }
 
-    /**
-     * ViewModel functions to modify Summoner Properties
-     */
-
-    suspend fun summonerPropertiesReceived() {
-        if (submitClicked) {
-            submitClicked = false
-            when (_summonerProperties.value) {
-                is Resource.Success -> {
-                    updatesDone = true
-                    homeEventChannel.send(HomeEvents.SummonerFound)
-                }
-                is Resource.Error -> {
-                    if (summonerProperties.value?.data != null) {
-                        updatesDone = true
-                        homeEventChannel.send(HomeEvents.SummonerFound)
-                    } else {
-                        homeEventChannel.send(HomeEvents.SummonerNotFound(summonerProperties.value?.error!!))
-                    }
-                }
-                is Resource.Loading -> {
-                    homeEventChannel.send(HomeEvents.SummonerNotFound(summonerProperties.value?.error!!))
-                }
-            }
-        }
-    }
 
     fun changeSummonerName(name: String) {
         _summonerName = name
     }
 
-    /**
-     * ViewModel functions related to champion roles
-     */
-
-    fun checkRoleList(list: List<ChampionRoleRates>?) {
-        if( list == null || list.isEmpty()){
-            refreshRoleList()
-        }else{
-            onGetRoleListEvent()
-        }
-    }
-
-    private fun refreshRoleList() {
-        viewModelScope.launch {
-            when (val result = repository.refreshChampionRates()) {
-                "Role List Success" -> {
-                    onGetRoleListEvent()
-                }
-                else -> {
-                    roleListFailed = true
-                    homeEventChannel.send(HomeEvents.RoleListFailed(result))
-                }
-            }
-        }
-    }
-
-    private fun onGetRoleListEvent() = viewModelScope.launch {
-        roleListReady = true
-        homeEventChannel.send(HomeEvents.RoleListReady)
-    }
-
-    fun roleListAndUpdatesReady() {
-        if (updatesDone && roleListFailed) {
-            roleListFailed = false
-            refreshRoleList()
-        } else if (roleListReady && updatesDone) {
-            viewModelScope.launch {
-                roleListReady = false
-                updatesDone = false
-                homeEventChannel.send(
-                    HomeEvents.NavigateToListScreen(
-                        summonerProperties.value?.data?.name!!,
-                        summonerProperties.value?.data?.profileIconId?.toInt() ?: 1
-                    )
-                )
-            }
-        }
-    }
 
     /**
      * Other Utility functions related to events

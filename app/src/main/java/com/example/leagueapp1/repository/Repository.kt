@@ -4,18 +4,14 @@ package com.example.leagueapp1.repository
 import android.app.Application
 import androidx.lifecycle.LiveData
 import androidx.room.withTransaction
-import com.example.leagueapp1.BuildConfig
 import com.example.leagueapp1.adapters.HeaderItem
 import com.example.leagueapp1.data.local.*
 import com.example.leagueapp1.data.remote.ChampionRoles
-import com.example.leagueapp1.data.remote.MatchDetails
-import com.example.leagueapp1.data.remote.RankDetails
 import com.example.leagueapp1.data.remote.RiotApiService
 import com.example.leagueapp1.data.remote.requests.LoginRequest
 import com.example.leagueapp1.data.remote.requests.SummonerFromKtor
-import com.example.leagueapp1.database.SortOrder
-import com.example.leagueapp1.repository.LeagueRepository.Companion.FRESH_TIMEOUT
 import com.example.leagueapp1.util.*
+import com.example.leagueapp1.util.Constants.MILLI_SECONDS_DAY
 import com.example.leagueapp1.util.Constants.champMap
 import com.leagueapp1.data.requests.AccountRequest
 import kotlinx.coroutines.flow.Flow
@@ -23,6 +19,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import retrofit2.Response
+import java.lang.System.currentTimeMillis
 import javax.inject.Inject
 
 
@@ -68,6 +65,7 @@ class Repository @Inject constructor(
         var result: Resource<String> = Resource.Loading(null)
         response.onSuccess {
             result = if (it.successful) {
+                changeMainSummoner(it.puuid!!)
                 Resource.Success(it.message)
             } else {
                 Resource.Error(Throwable(it.message), null)
@@ -80,6 +78,21 @@ class Repository @Inject constructor(
         return result
     }
 
+    override suspend fun changeMainSummoner(puuid: String) {
+        val summonerList = getAllSummoners().first()
+        summonerList.forEach {
+            if (puuid != it.puuid) {
+                insertSummoner(
+                    it.apply { isMainSummoner = false }
+                )
+            } else {
+                insertSummoner(
+                    it.apply { isMainSummoner = true }
+                )
+            }
+        }
+    }
+
     override suspend fun register(
         email: String,
         password: String,
@@ -89,7 +102,6 @@ class Repository @Inject constructor(
         var result: Resource<String> = Resource.Loading(null)
         response.onSuccess {
             result = if (it.successful) {
-
                 val summonerFromKtor = it.summoner!!
                 currentChampionList = summonerFromKtor.championList
                 summonerFromKtor.apply {
@@ -103,7 +115,8 @@ class Repository @Inject constructor(
                             revisionDate = revisionDate,
                             summonerLevel = summonerLevel,
                             isMainSummoner = true,
-                            rank = rank
+                            rank = rank,
+                            timeReceived = currentTimeMillis()
                         )
                     )
                     currentChampionList?.let { champs ->
@@ -111,6 +124,7 @@ class Repository @Inject constructor(
                     }
                 }
                 refreshChampionRates()
+                changeMainSummoner(summonerFromKtor.puuid)
                 Resource.Success(it.message)
             } else {
                 Resource.Error(Throwable(it.message), null)
@@ -128,30 +142,43 @@ class Repository @Inject constructor(
 
     override suspend fun syncSummonerAndChamps() {
         currentSummoner = summonersDao.getSummoner()
-        currentSummoner?.let {
-            val addSummonerResponse = safeApiCall { api.addSummoner(transformSummonerObject(it)) }
-            val updatedSummonerResponse = safeApiCall { api.getMainSummoner() }
-            updatedSummonerResponse.onSuccess { summonerKtor ->
-                currentChampionList = summonerKtor.championList
-                summonerKtor.apply {
-                    insertSummoner(
-                        SummonerProperties(
-                            id = id,
-                            accountId = accountId,
-                            puuid = puuid,
-                            name = name,
-                            profileIconId = profileIconId,
-                            revisionDate = revisionDate,
-                            summonerLevel = summonerLevel,
-                            isMainSummoner = true,
-                            rank = rank
-                        )
+        if (currentSummoner != null) {
+            safeApiCall {
+                api.addSummoner(
+                    transformSummonerObject(
+                        currentSummoner!!
                     )
-                    currentChampionList?.let { champs ->
-                        insertChampions(champs)
-                    }
-                }
+                )
+            }
+            retrieveSaveSummoner()
+        } else {
+            retrieveSaveSummoner()
+        }
 
+    }
+
+    override suspend fun retrieveSaveSummoner() {
+        val updatedSummonerResponse = safeApiCall { api.getMainSummoner() }
+        updatedSummonerResponse.onSuccess { summonerKtor ->
+            currentChampionList = summonerKtor.championList
+            summonerKtor.apply {
+                insertSummoner(
+                    SummonerProperties(
+                        id = id,
+                        accountId = accountId,
+                        puuid = puuid,
+                        name = name,
+                        profileIconId = profileIconId,
+                        revisionDate = revisionDate,
+                        summonerLevel = summonerLevel,
+                        isMainSummoner = true,
+                        rank = rank,
+                        timeReceived = currentTimeMillis()
+                    )
+                )
+                currentChampionList?.let { champs ->
+                    insertChampions(champs)
+                }
             }
         }
     }
@@ -160,12 +187,12 @@ class Repository @Inject constructor(
         val champList = getChampions(
             "",
             SortOrder.BY_MASTERY_POINTS,
-            false,
-            false,
-            false,
-            false,
-            false,
-            true
+            showADC = false,
+            showSup = false,
+            showMid = false,
+            showJungle = false,
+            showTop = false,
+            showAll = true
         ).first().data
         return SummonerFromKtor(
             id = summoner.id,
@@ -184,20 +211,13 @@ class Repository @Inject constructor(
      * Network and Database Functions for Summoners
      */
 
-    override val summoner: Flow<SummonerProperties?> = getSummonerFlow()
+    suspend fun getSummoner(): SummonerProperties? = summonersDao.getSummoner()
 
     override fun getAllSummoners(): Flow<List<SummonerProperties>> =
         summonersDao.getAllSummoners()
 
     override suspend fun insertSummoner(summoner: SummonerProperties) =
         summonersDao.insertSummoner(summoner)
-
-    override fun getSummonerFlow(): Flow<SummonerProperties?> =
-        summonersDao.getSummonerFlow()
-
-    override suspend fun getSummonerByName(summonerName: String): SummonerProperties? =
-        summonersDao.getSummonerByName(summonerName)
-
 
     /**
      * Network and Database Functions for Champion Roles
@@ -343,7 +363,7 @@ class Repository @Inject constructor(
             emit(
                 HeaderItem(
                     name = name,
-                    summonerIconId = profileIconId.toInt(),
+                    summonerIconId = profileIconId,
                     splashName = splashName
                 )
             )
@@ -379,12 +399,15 @@ class Repository @Inject constructor(
         },
         shouldFetch = { list ->
             val summoner = currentSummoner ?: summonersDao.getSummoner()
-            (list.isEmpty() || (summoner?.let {
-                championsDao.isFreshSummonerChampions(
-                    it.id,
-                    System.currentTimeMillis() - FRESH_TIMEOUT
-                )
-            } == 0)) && checkForInternetConnection(context)
+            summoner?.let {
+                val time = currentTimeMillis()
+                val isFresh = summonersDao.isFreshSummoner(
+                    summoner.name,
+                    time - MILLI_SECONDS_DAY
+                ) == 1
+                (list.isEmpty() || !isFresh) && checkForInternetConnection(context)
+            } ?: checkForInternetConnection(context)
+
         },
         fetch = {
             syncSummonerAndChamps()
@@ -392,9 +415,7 @@ class Repository @Inject constructor(
         },
         saveFetchResult = { list ->
             list?.let {
-                insertChampions(list.onEach {
-                    it.timeReceived = System.currentTimeMillis()
-                })
+                insertChampions(it)
             }
         }
 

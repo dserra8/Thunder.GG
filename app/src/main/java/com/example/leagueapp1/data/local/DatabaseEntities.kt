@@ -17,8 +17,6 @@ data class SummonerProperties(
         @Expose(deserialize = false, serialize = false)
         var timeReceived: Long? = null,
         @Expose(deserialize = false, serialize = false)
-        var initBoostCalculated: Boolean = false,
-        @Expose(deserialize = false, serialize = false)
         var isMainSummoner: Boolean = false,
         @Embedded var rank: Rank? = null
 )
@@ -38,7 +36,6 @@ data class ChampionMastery(
         val lastPlayTime: Double,
         val summonerId: String,
         var champName: String? = null,
-        var timeReceived: Long? = null,
         @Embedded var rankInfo: ChampRankInfo? = null,
         @Embedded var roles: TrueRoles? = null
 )
@@ -46,11 +43,6 @@ data class ChampionMastery(
 data class ChampRankInfo(
     val lp: Int? = null,
     val rank: String = "NONE"
-)
-
-data class Status(
-    val message: String,
-    val status_code: String
 )
 
 @Entity(tableName = "trueChampionRoles")

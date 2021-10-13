@@ -4,8 +4,8 @@ import androidx.lifecycle.*
 import androidx.navigation.NavDirections
 import com.example.leagueapp1.adapters.ChampItem
 import com.example.leagueapp1.data.local.ChampionMastery
-import com.example.leagueapp1.database.PreferencesManager
-import com.example.leagueapp1.database.SortOrder
+import com.example.leagueapp1.data.local.PreferencesManager
+import com.example.leagueapp1.data.local.SortOrder
 import com.example.leagueapp1.repository.LeagueRepository
 import com.example.leagueapp1.ui.listChamp.ListChampFragmentDirections
 import com.example.leagueapp1.util.filterChampionName
@@ -85,14 +85,7 @@ class ListChampViewModel @Inject constructor(
     val championList = champFlow.asLiveData()
 
     fun onClickChamp(champ: ChampItem) = viewModelScope.launch {
-            val champion =
-                repository.currentSummoner?.let { repository.getChampion(champ.id, summonerId = it.id) }
-            val action = if (champion?.rankInfo?.rank ?: "NONE" == "NONE") {
-                ListChampFragmentDirections.actionListChampFragmentToIntroChampFragment(champ)
-            } else {
-                ListChampFragmentDirections.actionListChampFragmentToChampScreenFragment(champ)
-            }
-
+            val action = ListChampFragmentDirections.actionListChampFragmentToChampScreenFragment(champ)
             championListEventsChannel.send(ChampListEvents.NavigateToChampScreen(action))
     }
 

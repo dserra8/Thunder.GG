@@ -3,7 +3,6 @@ package com.example.leagueapp1.util
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.leagueapp1.data.local.Rank
-import com.example.leagueapp1.data.local.Status
 import com.example.leagueapp1.data.local.SummonerProperties
 import java.util.*
 
@@ -61,7 +60,6 @@ fun createSummonerProperties(
     summonerLevel : Long = 0.0.toLong(),
     isMainSummoner: Boolean = false,
     timeReceived : Long = 0,
-    initBoostCalculated : Boolean = false,
     rank : Rank? = null,
 ) = SummonerProperties(
     id = id,
@@ -73,6 +71,5 @@ fun createSummonerProperties(
     summonerLevel = summonerLevel,
     isMainSummoner = isMainSummoner,
     timeReceived = timeReceived,
-    initBoostCalculated = initBoostCalculated,
     rank = rank
 )

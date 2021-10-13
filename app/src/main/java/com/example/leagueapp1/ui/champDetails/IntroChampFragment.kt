@@ -31,9 +31,6 @@ class IntroChampFragment: Fragment(R.layout.intro_champ_layout) {
     private lateinit var circularProgress: CircularProgressBar
 
     private lateinit var rankImg: ImageView
-
-    private val args by navArgs<IntroChampFragmentArgs>()
-
     private val viewModel: IntroChampViewModel by viewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -53,31 +50,22 @@ class IntroChampFragment: Fragment(R.layout.intro_champ_layout) {
 
         viewModel.apply {
 
-            summonerFlow.observe(viewLifecycleOwner) {
-                if (it != null) {
-                    matchListForRecentBoost()
-                }
-            }
 
             viewLifecycleOwner.lifecycleScope.launch {
                 viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                     introChampEvents.collect { events ->
                         when (events) {
                             is IntroChampViewModel.IntroChampEvents.AnimationEnded -> {
-                                val action = IntroChampFragmentDirections.actionIntroChampFragmentToChampScreenFragment(args.introChampionPicked)
-                                findNavController().navigate(action)
+
                             }
                             is IntroChampViewModel.IntroChampEvents.Error -> {
                                 Snackbar.make(requireView(), events.error, Snackbar.LENGTH_LONG)
                             }
                             is IntroChampViewModel.IntroChampEvents.InitBoostReady -> {
-                                val lp = events.boost.rem(100)
-                                val rankKey = events.boost.div(100)
-                                updateChampionRank(lp = lp, rankKey = rankKey, champId = args.introChampionPicked.id)
-                                initiateBoostAnimation(lp, rankKey)
+
                             }
                             is IntroChampViewModel.IntroChampEvents.RecentInitBoostDetermined -> {
-                                recentBoostReady(args.introChampionPicked)
+
                             }
                         }.exhaustive
 

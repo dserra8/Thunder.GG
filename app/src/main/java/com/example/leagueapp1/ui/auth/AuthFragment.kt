@@ -2,8 +2,14 @@ package com.example.leagueapp1.ui.auth
 
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.View.INVISIBLE
+import android.view.View.VISIBLE
+import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -13,22 +19,18 @@ import androidx.navigation.fragment.findNavController
 import com.example.leagueapp1.R
 import com.example.leagueapp1.data.remote.BasicAuthInterceptor
 import com.example.leagueapp1.databinding.AuthLayoutBinding
+import com.example.leagueapp1.ui.MainActivity
 import com.example.leagueapp1.util.Constants
 import com.example.leagueapp1.util.Constants.NO_EMAIL
 import com.example.leagueapp1.util.Constants.NO_PASSWORD
-import com.example.leagueapp1.util.Constants.SECURED_EMAIL
-import com.example.leagueapp1.util.Constants.SECURED_PASS
-import com.example.leagueapp1.util.DataStoreUtil
 import com.example.leagueapp1.util.Resource
 import com.example.leagueapp1.util.exhaustive
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import javax.inject.Inject
 
@@ -43,9 +45,6 @@ class AuthFragment : Fragment(R.layout.auth_layout) {
 
     @Inject
     lateinit var basicAuthInterceptor: BasicAuthInterceptor
-
-//    @Inject
-//    lateinit var dataStore: DataStoreUtil
 
     @Inject
     lateinit var sharedPref: SharedPreferences
@@ -83,12 +82,8 @@ class AuthFragment : Fragment(R.layout.auth_layout) {
     }
 
     private fun redirectLogin() {
-        val navOptions = NavOptions.Builder()
-            .setPopUpTo(R.id.authFragment, true)
-            .build()
         findNavController().navigate(
-            AuthFragmentDirections.actionAuthFragmentToListChampFragment(),
-        navOptions)
+            AuthFragmentDirections.actionAuthFragmentToListChampFragment())
     }
 
     /**
@@ -100,6 +95,9 @@ class AuthFragment : Fragment(R.layout.auth_layout) {
             result?.let {
                 when (it) {
                     is Resource.Error -> {
+                        binding.loginButton.visibility = VISIBLE
+                        binding.loadingBarAuth.visibility = INVISIBLE
+                        binding.passwordTextField.setText("")
                         Snackbar.make(
                             requireView(),
                             it.error?.message ?: "An unknown error occured",
@@ -107,7 +105,8 @@ class AuthFragment : Fragment(R.layout.auth_layout) {
                         ).show()
                     }
                     is Resource.Loading -> {
-                        /*NO-OP*/
+                        binding.loginButton.visibility = INVISIBLE
+                        binding.loadingBarAuth.visibility = VISIBLE
                     }
                     is Resource.Success -> {
                         Snackbar.make(
@@ -118,7 +117,7 @@ class AuthFragment : Fragment(R.layout.auth_layout) {
                         sharedPref.edit().putString(Constants.KEY_LOGGED_IN_EMAIL, viewModel.email).apply()
                         sharedPref.edit().putString(Constants.KEY_LOGGED_IN_PASSWORD, viewModel.password).apply()
                         authenticateApi()
-                        redirectLogin()
+                        viewModel.syncSummoner()
                     }
                 }.exhaustive
             }
@@ -128,6 +127,10 @@ class AuthFragment : Fragment(R.layout.auth_layout) {
             result?.let {
                 when (it) {
                     is Resource.Error -> {
+                        binding.registerButton.visibility = VISIBLE
+                        binding.loadingBarAuth.visibility = INVISIBLE
+                        binding.registerPasswordTextField.setText("")
+                        binding.repeatPasswordTextField.setText("")
                         Snackbar.make(
                             requireView(),
                             it.error?.message ?: "An unknown error occured",
@@ -135,7 +138,8 @@ class AuthFragment : Fragment(R.layout.auth_layout) {
                         ).show()
                     }
                     is Resource.Loading -> {
-                        /*NO-OP*/
+                        binding.registerButton.visibility = INVISIBLE
+                        binding.loadingBarAuth.visibility = VISIBLE
                     }
                     is Resource.Success -> {
                         Snackbar.make(
@@ -161,14 +165,12 @@ class AuthFragment : Fragment(R.layout.auth_layout) {
                             is AuthViewModel.AuthEvents.LoginClicked -> {
                                 setEmailPassword(binding.usernameTextField.text.toString(), binding.passwordTextField.text.toString())
                                 login(email, password)
-
                             }
                             is AuthViewModel.AuthEvents.RegisterClicked -> {
                                 setEmailPassword(binding.registerUsernameTextField.text.toString(), binding.registerPasswordTextField.text.toString())
                                 register(email, password, binding.repeatPasswordTextField.text.toString(), binding.registerSummonerTextField.text.toString())
                             }
-                            is AuthViewModel.AuthEvents.RedirectLogin -> {
-                                authenticateApi()
+                            is AuthViewModel.AuthEvents.SyncingDone -> {
                                 redirectLogin()
                             }
                         }.exhaustive
@@ -177,5 +179,12 @@ class AuthFragment : Fragment(R.layout.auth_layout) {
                 }
             }
         }
+    }
+
+    @ExperimentalCoroutinesApi
+    override fun onResume() {
+        super.onResume()
+        val activity = activity as MainActivity
+        activity.hideUpButton()
     }
 }

@@ -31,7 +31,6 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.leagueapp1.R
 import com.example.leagueapp1.databinding.ActivityMainBinding
 import com.example.leagueapp1.ui.factory.DefaultFragmentFactoryEntryPoint
-import com.example.leagueapp1.ui.home.HomeFragmentDirections
 import com.example.leagueapp1.util.Constants
 import com.example.leagueapp1.util.exhaustive
 import com.example.leagueapp1.work.RefreshChampionRolesWorker
@@ -109,14 +108,14 @@ class MainActivity : AppCompatActivity() {
 
         val menu = navigationView.menu
         val pickChampionItem = menu.findItem(R.id.listChampFragment)
-        pickChampionItem.isVisible = false
+        pickChampionItem.isVisible = true
         val summonerName = headerView.findViewById<TextView>(R.id.navigationSummonerName)
         val iconImg = headerView.findViewById<ImageView>(R.id.navigationSummonerIcon)
         val splashArt = headerView.findViewById<ImageView>(R.id.navigationSplashArt)
 
+        navigationView
         viewModel.headerInfo.observe(this) { headerInfo ->
             if (headerInfo != null) {
-                viewModel.changeNavigationHeader("Kayle")
                 summonerName.text = headerInfo.name
                 val profileIconUrl = "${Constants.PROFILE_ICON_URL}${headerInfo.summonerIconId}.png"
                 val splashArtUrl = "${Constants.SPLASH_ART_URL}${headerInfo.splashName}_0.jpg"
@@ -137,13 +136,6 @@ class MainActivity : AppCompatActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.mainActivityEvents.collect { event ->
                     when (event) {
-                        is MainViewModel.MainActivityEvents.FirstTime -> {
-                            //supportActionBar?.setCustomView(R.layout.action_bar_in_champ_list)
-                            supportActionBar?.setTitle(event.name)
-                        }
-                        is MainViewModel.MainActivityEvents.ChangeActionBarHome -> {
-                            supportActionBar?.setTitle("Thunder.GG")
-                        }
                         is MainViewModel.MainActivityEvents.ChangeActionBarOther -> {
                             supportActionBar?.setTitle(event.name)
                         }
@@ -163,8 +155,8 @@ class MainActivity : AppCompatActivity() {
                 if (slideOffset > 0.0f && shouldCheckDrawer) {
                     shouldCheckDrawer = false
                     lifecycleScope.launch(Dispatchers.Main) {
-                        viewModel.collectPreferencesFlow()
-                        pickChampionItem.isVisible = viewModel.isActive
+//                        viewModel.collectPreferencesFlow()
+//                        pickChampionItem.isVisible = viewModel.isActive
                     }
                 }
             }
@@ -215,6 +207,14 @@ class MainActivity : AppCompatActivity() {
     override fun onSupportNavigateUp(): Boolean {
         //  val navController = findNavController(R.id.nav_host_fragment)
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
+    }
+
+    fun hideUpButton() {
+        supportActionBar?.setDisplayHomeAsUpEnabled(false)
+    }
+
+    fun showUpButton() {
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
     }
 
     private fun delayedInit() {

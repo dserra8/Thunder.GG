@@ -21,14 +21,18 @@ class SettingsViewModel @Inject constructor(
     val settingEvents = settingEventChannel.receiveAsFlow()
 
     fun onConfirmClick() = applicationScope.launch {
-
     }
 
     fun onDeleteSummonerClick() = viewModelScope.launch {
         settingEventChannel.send(SettingsEvents.DeleteSummoner)
     }
 
+    fun onLogout() = viewModelScope.launch {
+        settingEventChannel.send(SettingsEvents.Logout)
+    }
+
     sealed class SettingsEvents {
         object DeleteSummoner: SettingsEvents()
+        object Logout: SettingsEvents()
     }
 }

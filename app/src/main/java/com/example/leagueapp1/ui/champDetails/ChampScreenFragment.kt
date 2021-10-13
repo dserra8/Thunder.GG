@@ -52,14 +52,14 @@ class ChampScreenFragment @Inject constructor(
             .into(binding.champImg)
 
         mainViewModel.updateActionBarTitle(champObj.champName, false)
+        viewModel.summonerReady(champObj.id)
 
         viewModel.apply {
-            summonerFlow.observe(viewLifecycleOwner) {
-                if (it != null) {
-                    summonerReady(args.championPicked.id)
-                }
-            }
-
+//            summonerFlow.observe(viewLifecycleOwner) {
+//                if (it != null) {
+//                    summonerReady(args.championPicked.id)
+//                }
+//            }
 
             viewLifecycleOwner.lifecycleScope.launch {
                 viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {

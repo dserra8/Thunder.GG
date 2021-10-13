@@ -22,7 +22,6 @@ class DeleteSummonerDialogFragment : DialogFragment() {
             .setMessage("Do you really want to delete this Summoner?")
             .setNegativeButton("Cancel", null)
             .setPositiveButton("Yes"){_,_ ->
-                mainViewModel.isSummonerActive(false)
                 viewModel.onConfirmClick()
             }
             .create()

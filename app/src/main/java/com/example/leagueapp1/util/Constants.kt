@@ -3,14 +3,6 @@ package com.example.leagueapp1.util
 import androidx.datastore.preferences.core.stringPreferencesKey
 
 object Constants {
-    const val ALL_CHAMPION_MASTERIES = "lol/champion-mastery/v4/champion-masteries/by-summoner/"
-
-    const val SUMMONER_INFO = "lol/summoner/v4/summoners/by-name/"
-
-    const val MATCH_LIST = "https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/"
-
-    const val MATCH_DETAIL_URL = "https://americas.api.riotgames.com/lol/match/v5/matches/"
-
     const val CHAMPION_RATES_URL =
         "http://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/championrates.json"
 
@@ -18,9 +10,7 @@ object Constants {
 
     const val SPLASH_ART_URL = "http://ddragon.leagueoflegends.com/cdn/img/champion/splash/"
 
-    const val SUMMONER_RANK_URL = "https://na1.api.riotgames.com/lol/league/v4/entries/by-summoner/"
-
-    const val KTOR_URL = "http://10.0.2.2:8001"
+    const val KTOR_URL = "http://192.168.0.28:8001"
 
     const val KTOR_SUMMONER = "/getSummoner"
 
@@ -42,11 +32,7 @@ object Constants {
 
     val IGNORE_AUTH_URLS = listOf("/login", "/register")
 
-    val DATA = stringPreferencesKey("data")
-
-    val SECURED_PASS = stringPreferencesKey("secured_pass")
-
-    val SECURED_EMAIL = stringPreferencesKey("secured_email")
+    const val MILLI_SECONDS_DAY : Long = 86400000
 
     enum class Ranks {
         IRON,

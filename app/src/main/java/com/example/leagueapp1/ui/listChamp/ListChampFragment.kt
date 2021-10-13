@@ -7,6 +7,7 @@ import android.view.View.VISIBLE
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.get
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -20,7 +21,7 @@ import com.example.leagueapp1.R
 import com.example.leagueapp1.adapters.ChampItem
 import com.example.leagueapp1.adapters.ChampionListAdapterNoHeader
 import com.example.leagueapp1.data.local.ChampionMastery
-import com.example.leagueapp1.database.SortOrder
+import com.example.leagueapp1.data.local.SortOrder
 import com.example.leagueapp1.databinding.ListChampsBinding
 import com.example.leagueapp1.util.*
 import dagger.hilt.android.AndroidEntryPoint
@@ -55,8 +56,7 @@ class ListChampFragment : Fragment() {
 
         binding = ListChampsBinding.inflate(inflater)
 
-        mainViewModel.updateActionBarTitle("Champions", false)
-        mainViewModel.isSummonerActive(true)
+       // mainViewModel.updateActionBarTitle("Champions", false)
 
         viewModel.navigatedFromOtherScreen()
 

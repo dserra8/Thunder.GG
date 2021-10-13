@@ -1,22 +1,13 @@
 package com.example.leagueapp1.ui.auth
 
-import android.content.SharedPreferences
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.leagueapp1.repository.LeagueRepository
-import com.example.leagueapp1.ui.home.HomeViewModel
-import com.example.leagueapp1.util.Constants
-import com.example.leagueapp1.util.Constants.KEY_LOGGED_IN_EMAIL
-import com.example.leagueapp1.util.Constants.KEY_LOGGED_IN_PASSWORD
-import com.example.leagueapp1.util.Constants.NO_EMAIL
-import com.example.leagueapp1.util.Constants.NO_PASSWORD
-import com.example.leagueapp1.util.DataStoreUtil
 import com.example.leagueapp1.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -26,8 +17,6 @@ import javax.inject.Inject
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val repository: LeagueRepository,
-    private val dataStore: DataStoreUtil,
-//    private val sharedPref: SharedPreferences
 ): ViewModel() {
 
     var email: String = ""
@@ -82,28 +71,14 @@ class AuthViewModel @Inject constructor(
 
     }
 
-    fun secureData() {
-//        viewModelScope.launch {
-//            dataStore.setSecuredData(password, Constants.SECURED_PASS)
-//            dataStore.setSecuredData(email, Constants.SECURED_EMAIL)
-//        }
+    fun syncSummoner() = viewModelScope.launch {
+        repository.syncSummonerAndChamps()
+        authEventChannel.send(AuthEvents.SyncingDone)
     }
 
-    fun retrieveData() {
-       viewModelScope.launch {
-//            email = dataStore.getSecuredData(Constants.SECURED_EMAIL).first()
-//            password = dataStore.getSecuredData(Constants.SECURED_PASS).first()
-//            if(email != NO_EMAIL && email.isNotBlank() && password != NO_EMAIL && password.isNotBlank())
-//                authEventChannel.send(AuthEvents.RedirectLogin)
-
-      }
-
-    }
     sealed class AuthEvents {
         object LoginClicked: AuthEvents()
         object RegisterClicked: AuthEvents()
-        object RedirectLogin: AuthEvents()
+        object SyncingDone: AuthEvents()
     }
-
-
 }

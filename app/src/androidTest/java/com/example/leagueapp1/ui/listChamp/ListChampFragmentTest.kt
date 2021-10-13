@@ -1,9 +1,7 @@
 package com.example.leagueapp1.ui.listChamp
 
 import android.content.Context
-import android.os.SystemClock
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import androidx.test.core.app.ApplicationProvider
@@ -17,12 +15,9 @@ import com.example.leagueapp1.R
 import com.example.leagueapp1.adapters.ChampItem
 import com.example.leagueapp1.adapters.ChampionListAdapterNoHeader
 import com.example.leagueapp1.launchFragmentInHiltContainer
-import com.example.leagueapp1.util.Constants
-import com.example.leagueapp1.util.createSummonerProperties
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runBlockingTest
 import org.junit.After
 import org.junit.Before
@@ -59,31 +54,6 @@ class ListChampFragmentTest {
         ).deleteRecursively()
     }
 
-
-    @Test
-    fun pressRecyclerViewItem_NavigateToIntroScreen() = runBlockingTest{
-
-        val navController = mock(NavController::class.java)
-        var imageId: Int = 0
-        var rankId: Int = 0
-        launchFragmentInHiltContainer<ListChampFragment> {
-            Navigation.setViewNavController(requireView(), navController)
-            imageId = resources.getIdentifier("twistedfate", "drawable", activity?.packageName)
-        }
-
-        onView(withId(R.id.recycler_view)).perform(
-            RecyclerViewActions.actionOnItemAtPosition<ChampionListAdapterNoHeader.ChampionItemViewHolder>(
-                0,
-                click()
-            )
-        )
-
-        val champItemTest = ChampItem(imageId, "Twisted Fate ", 4, 500, rankId)
-        verify(navController).navigate(
-            ListChampFragmentDirections.actionListChampFragmentToIntroChampFragment(champItemTest)
-        )
-
-    }
 
     @Test
     fun pressRecyclerViewItemWithRank_NavigateToChampDetailsScreen() = runBlockingTest{

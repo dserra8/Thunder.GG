@@ -41,11 +41,13 @@ class HomeFragment : Fragment() {
         binding = HomeBinding.inflate(inflater)
 
 
+//        parentFragmentManager.popBackStack(R.id.listChampFragment, )
+
         //Initializing my view model factory and the view model
         binding.viewModel = viewModel
         binding.lifecycleOwner = this
 
-        mainViewModel.updateActionBarTitle(getString(R.string.app_name), true)
+        //mainViewModel.updateActionBarTitle(getString(R.string.app_name), true)
 
         viewModel.apply {
 
@@ -56,15 +58,6 @@ class HomeFragment : Fragment() {
                 }
             }
 
-            roleList.observe(viewLifecycleOwner){ list ->
-                checkRoleList(list)
-            }
-
-            summonerProperties.observe(viewLifecycleOwner){
-                viewLifecycleOwner.lifecycleScope.launch {
-                    summonerPropertiesReceived()
-                }
-            }
 
             viewLifecycleOwner.lifecycleScope.launch {
                 viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -76,7 +69,7 @@ class HomeFragment : Fragment() {
                                 submitIsClicked()
                             }
                             is HomeViewModel.HomeEvents.SummonerFound -> {
-                                roleListAndUpdatesReady()
+
                             }
                             is HomeViewModel.HomeEvents.SummonerNotFound -> {
                                 Snackbar.make(
@@ -86,12 +79,12 @@ class HomeFragment : Fragment() {
                                 ).show()
                             }
                             is HomeViewModel.HomeEvents.RoleListReady -> {
-                                roleListAndUpdatesReady()
+
                             }
                             is HomeViewModel.HomeEvents.NavigateToListScreen -> {
-                                findNavController().navigate(
-                                    HomeFragmentDirections.actionHomeFragmentToListChampFragment()
-                                )
+//                                findNavController().navigate(
+//                                    HomeFragmentDirections.actionHomeFragmentToListChampFragment()
+//                                )
                             }
                             is HomeViewModel.HomeEvents.RoleListFailed -> {
                                 Snackbar.make(

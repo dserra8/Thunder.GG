@@ -1,4 +1,4 @@
-package com.example.leagueapp1.database
+package com.example.leagueapp1.data.local
 
 import android.content.Context
 import android.util.Log
@@ -30,10 +30,6 @@ data class FilterPreferences(
     var showJungle: Boolean,
     var showTop: Boolean,
     var showAll: Boolean
-)
-
-data class MainPreferences(
-    val isSummonerActive: Boolean
 )
 
 @Singleton
@@ -100,25 +96,6 @@ class PreferencesManager @Inject constructor(
         }
     }
 
-    val mainPreferencesFlow = context.dataMainActivity.data
-        .catch { exception ->
-        if(exception is IOException){
-            Log.e(TAG, "Error reading preferences. ", exception)
-        } else{
-            throw exception
-        }
-    }.map { preferences ->
-            val isSummonerActive = preferences[MainPreferencesKeys.IS_SUMMONER_ACTIVE] ?: false
-            MainPreferences(isSummonerActive = isSummonerActive)
-        }
-
-    suspend fun updateIsSummonerActive(isActive: Boolean) {
-        context.dataMainActivity.edit { preferences ->
-            preferences[MainPreferencesKeys.IS_SUMMONER_ACTIVE] = isActive
-        }
-    }
-
-
     private object PreferencesKeys{
         val QUERY = stringPreferencesKey("query")
         val SORT_ORDER = stringPreferencesKey("sort_order")
@@ -128,9 +105,5 @@ class PreferencesManager @Inject constructor(
         val SHOWMID = booleanPreferencesKey("show_mid")
         val SHOWJUNGLE = booleanPreferencesKey("show_jungle")
         val SHOWTOP = booleanPreferencesKey("show_top")
-    }
-
-    private object MainPreferencesKeys{
-        val IS_SUMMONER_ACTIVE = booleanPreferencesKey("active_summoner")
     }
 }

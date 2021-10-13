@@ -2,7 +2,6 @@ package com.example.leagueapp1.data.local
 
 import androidx.lifecycle.LiveData
 import androidx.room.*
-import com.example.leagueapp1.database.SortOrder
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -88,9 +87,6 @@ interface ChampionsDao {
 
     @Query("DELETE FROM summonerChampions WHERE summonerId=:id")
     suspend fun deleteSummonerChampions(id: String)
-
-    @Query("SELECT COUNT(*) FROM summonerChampions WHERE summonerId=:summonerId AND timeReceived >=:time")
-    suspend fun isFreshSummonerChampions(summonerId: String, time: Long): Int
 
     @Query( "UPDATE summonerChampions SET lp=:lp, rank=:rank WHERE summonerId=:summonerId AND championId=:champId")
     suspend fun updateChampionRank(summonerId: String, champId: Int, lp: Int, rank: String)
