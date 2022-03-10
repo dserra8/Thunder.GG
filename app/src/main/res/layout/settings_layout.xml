@@ -7,14 +7,14 @@
     <data>
         <variable
             name="viewModel"
-            type="com.example.leagueapp1.ui.settings.SettingsViewModel" />
+            type="com.example.leagueapp1.feature_settings.presentation.main_settings.SettingsViewModel" />
     </data>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:background="@drawable/home_screen_drawable">
+        android:background="@color/lightGray">
 
         <Button
             android:id="@+id/deleteSummonerButton"

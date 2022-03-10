@@ -2,18 +2,18 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".ui.home.HomeFragment">
+    tools:context=".feature_search_summoner.presentation.search_summoner.HomeFragment">
 
     <data>
         <variable
             name="viewModel"
-            type="com.example.leagueapp1.ui.home.HomeViewModel" />
+            type="com.example.leagueapp1.feature_search_summoner.presentation.search_summoner.HomeViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/home_screen_drawable">
+        android:background="@color/lightGray">
 
 
         <Button
@@ -27,7 +27,7 @@
             android:onClick="@{() -> viewModel.onSubmit()}"
             android:text="@string/submit"
             android:textSize="14sp"
-            android:textColor="@color/colorOfAllTexts"
+            android:textColor="@color/primaryTextColor"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"

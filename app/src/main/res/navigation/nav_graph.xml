@@ -7,12 +7,12 @@
 
     <fragment
         android:id="@+id/homeFragment"
-        android:name="com.example.leagueapp1.ui.home.HomeFragment"
+        android:name="com.example.leagueapp1.feature_search_summoner.presentation.search_summoner.HomeFragment"
         android:label="Thunder.GG"
         tools:layout="@layout/home" />
     <fragment
         android:id="@+id/listChampFragment"
-        android:name="com.example.leagueapp1.ui.listChamp.ListChampFragment"
+        android:name="com.example.leagueapp1.feature_champions.presentation.champ_list.ListChampFragment"
         android:label="Champions"
         tools:layout="@layout/list_champs" >
         <action
@@ -25,7 +25,7 @@
     </fragment>
     <fragment
         android:id="@+id/champScreenFragment"
-        android:name="com.example.leagueapp1.ui.champDetails.ChampScreenFragment"
+        android:name="com.example.leagueapp1.feature_champions.presentation.champ_profile.ChampScreenFragment"
         tools:layout="@layout/champ_screen" >
         <argument
             android:name="championPicked"
@@ -38,7 +38,7 @@
     </fragment>
     <fragment
         android:id="@+id/settingsFragment"
-        android:name="com.example.leagueapp1.ui.settings.SettingsFragment"
+        android:name="com.example.leagueapp1.feature_settings.presentation.main_settings.SettingsFragment"
         android:label="Settings"
         tools:layout="@layout/settings_layout" >
         <action
@@ -53,7 +53,7 @@
     </fragment>
     <fragment
         android:id="@+id/authFragment"
-        android:name="com.example.leagueapp1.ui.auth.AuthFragment"
+        android:name="com.example.leagueapp1.feature_auth.presentation.login_register.AuthFragment"
         android:label="Login/Register"
         tools:layout="@layout/auth_layout" >
         <action

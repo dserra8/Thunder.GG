@@ -2,14 +2,13 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".ui.auth.AuthFragment">
+    tools:context=".feature_auth.presentation.login_register.AuthFragment">
 
 
     <data>
-
         <variable
             name="viewModel"
-            type="com.example.leagueapp1.ui.auth.AuthViewModel" />
+            type="com.example.leagueapp1.feature_auth.presentation.login_register.AuthViewModel" />
     </data>
 
     <androidx.constraintlayout.motion.widget.MotionLayout
@@ -30,6 +29,7 @@
             app:layout_constraintTop_toTopOf="parent">
 
         </androidx.constraintlayout.widget.ConstraintLayout>
+
 
         <ImageView
             android:id="@+id/logoImg"
@@ -91,7 +91,6 @@
             android:layout_marginEnd="@dimen/login_register_button_margin"
             android:background="@drawable/drawable_box_champ"
             android:text="@string/login_text"
-            android:onClick="@{() -> viewModel.onLogin()}"
             app:layout_constraintBottom_toBottomOf="@+id/loginContainer"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -106,7 +105,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/passwordTextLayout"
-            tools:visibility="visible" />
+             />
 
 
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -215,7 +214,9 @@
                 android:id="@+id/registerPasswordTextField"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textPassword" />
+                android:inputType="textPassword"
+                android:text="@={viewModel.registerPasswordState}"
+                />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -238,7 +239,9 @@
                 android:id="@+id/repeatPasswordTextField"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textPassword" />
+                android:inputType="textPassword"
+                android:text="@={viewModel.repeatPasswordState}"
+                 />
         </com.google.android.material.textfield.TextInputLayout>
 
 
@@ -250,7 +253,6 @@
             android:layout_marginEnd="@dimen/login_register_button_margin"
             android:background="@drawable/drawable_box_champ"
             android:text="@string/register_text"
-            android:onClick="@{() -> viewModel.onRegister()}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

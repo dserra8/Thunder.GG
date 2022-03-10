@@ -4,10 +4,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".ui.home.listChamp.ListChampFragment">
 
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/refreshContainer"
+        >
+
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/home_screen_drawable"
+            android:background="@color/lightGray"
             >
 
             <androidx.recyclerview.widget.RecyclerView
@@ -44,7 +50,6 @@
                 android:layout_height="wrap_content"
                 android:visibility="invisible"
                 app:fabSize="mini"
-                app:rippleColor="#CA2222"
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentBottom="true"
                 android:layout_marginEnd="10dp"
@@ -54,4 +59,5 @@
 
 
         </RelativeLayout>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </layout>

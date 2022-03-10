@@ -6,12 +6,14 @@
         android:id="@+id/action_search"
         android:icon="@drawable/ic_search"
         android:title="Search"
+        android:iconTint="@color/primaryTextColor"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:showAsAction="always|collapseActionView" />
 
     <item
         android:title="Sort"
         app:showAsAction="always"
+        android:iconTint="@color/primaryTextColor"
         >
 
         <menu>
@@ -31,7 +33,8 @@
 
     <item
         android:title="SHOW"
-        app:showAsAction="always">
+        app:showAsAction="always"
+        android:iconTint="@color/primaryTextColor">
 
         <menu>
             <group

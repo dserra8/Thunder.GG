@@ -23,11 +23,34 @@
         <entry key="..\:/Users/Daniel Serrano/AndroidStudioProjects/LeagueApp1/app/src/main/res/layout/summoner_header.xml" value="0.215625" />
         <entry key="..\:/Users/Daniel Serrano/AndroidStudioProjects/LeagueApp1/app/src/main/res/layout/temp.xml" value="0.15501519756838905" />
         <entry key="..\:/Users/Daniel Serrano/AndroidStudioProjects/LeagueApp1/app/src/main/res/menu/drawer_menu.xml" value="0.43125" />
-        <entry key="app/src/main/res/layout/activity_main.xml" value="0.23425925925925925" />
+        <entry key="app/src/main/res/drawable/champ_update_indicator.xml" value="0.3635" />
+        <entry key="app/src/main/res/drawable/game_overview_gradient.xml" value="0.4197916666666667" />
+        <entry key="app/src/main/res/drawable/game_overview_gradient_loss.xml" value="0.1495" />
+        <entry key="app/src/main/res/drawable/game_overview_gradient_win.xml" value="0.1495" />
+        <entry key="app/src/main/res/drawable/home_screen_drawable.xml" value="0.4197916666666667" />
+        <entry key="app/src/main/res/drawable/ic_error.xml" value="0.1" />
+        <entry key="app/src/main/res/drawable/ic_image.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/action_bar_in_champ_list.xml" value="0.2115036231884058" />
+        <entry key="app/src/main/res/layout/action_bar_layout.xml" value="0.2115036231884058" />
+        <entry key="app/src/main/res/layout/activity_main.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/auth_layout.xml" value="0.33" />
+        <entry key="app/src/main/res/layout/champ_item.xml" value="0.45" />
         <entry key="app/src/main/res/layout/champ_screen.xml" value="0.3796875" />
+        <entry key="app/src/main/res/layout/dropdown_item.xml" value="0.20108695652173914" />
+        <entry key="app/src/main/res/layout/fadepopup.xml" value="0.21603260869565216" />
+        <entry key="app/src/main/res/layout/game_overview_popup_window.xml" value="0.25" />
         <entry key="app/src/main/res/layout/home.xml" value="0.23425925925925925" />
+        <entry key="app/src/main/res/layout/list_champs.xml" value="0.335" />
+        <entry key="app/src/main/res/layout/navigation_header.xml" value="0.19655797101449277" />
+        <entry key="app/src/main/res/layout/settings_layout.xml" value="0.19655797101449277" />
+        <entry key="app/src/main/res/layout/summoner_header.xml" value="0.20108695652173914" />
+        <entry key="app/src/main/res/menu/drawer_menu.xml" value="0.328125" />
+        <entry key="app/src/main/res/menu/menu_champion_list.xml" value="0.328125" />
       </map>
     </option>
+  </component>
+  <component name="ProjectPlainTextFileTypeManager">
+    <file url="file://$PROJECT_DIR$/app/src/main/res/layout/dropdown_item.xml" />
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="11" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/build/classes" />

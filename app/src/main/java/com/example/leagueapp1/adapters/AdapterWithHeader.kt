@@ -10,8 +10,9 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.leagueapp1.databinding.ChampItemBinding
 import com.example.leagueapp1.databinding.SummonerHeaderBinding
-import com.example.leagueapp1.util.Constants.PROFILE_ICON_URL
-import com.example.leagueapp1.util.Constants.SPLASH_ART_URL
+import com.example.leagueapp1.core.util.Constants.PROFILE_ICON_URL
+import com.example.leagueapp1.core.util.Constants.SPLASH_ART_URL
+import com.example.leagueapp1.core.util.exhaustive
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -46,7 +47,7 @@ class ChampionListAdapterWithHeader(private val onItemClicked: (ChampItem) ->Uni
         return when (getItem(position)) {
             is ChampionItem.ChampInfo -> ITEM_VIEW_TYPE_ITEM
             is ChampionItem.Header -> ITEM_VIEW_TYPE_HEADER
-        }
+        }.exhaustive
     }
 
     fun addHeaderAndSubmitList(list: List<ChampItem>?, header: HeaderItem){

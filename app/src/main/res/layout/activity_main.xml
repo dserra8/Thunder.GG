@@ -8,7 +8,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fitsSystemWindows="true"
-        tools:context=".ui.MainActivity"
+        tools:context=".core.presentation.main.MainActivity"
         tools:openDrawer="start">
 
         <LinearLayout
@@ -25,11 +25,11 @@
                     android:id="@+id/my_toolbar"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/home_screen_drawable"
                     android:elevation="4dp"
                     android:fitsSystemWindows="true"
                     android:minHeight="?attr/actionBarSize"
-                    app:titleTextColor="@android:color/black" />
+                    app:popupTheme="@style/Theme.LeagueApp1.PopupOverlay"
+                    app:titleTextColor="@color/primaryTextColor" />
             </com.google.android.material.appbar.AppBarLayout>
 
 
@@ -45,7 +45,6 @@
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:navGraph="@navigation/nav_graph" />
-
         </LinearLayout>
 
 
@@ -54,12 +53,9 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="start"
-            android:background="@drawable/home_screen_drawable"
+            android:background="@color/lightGray"
             app:menu="@menu/drawer_menu"
-
             tools:headerLayout="@layout/navigation_header">
-
-
         </com.google.android.material.navigation.NavigationView>
 
 

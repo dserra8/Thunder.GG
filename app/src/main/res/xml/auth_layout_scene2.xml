@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<MotionScene 
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<MotionScene xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:motion="http://schemas.android.com/apk/res-auto">
 
     <Transition
         motion:constraintSetEnd="@+id/end"
         motion:constraintSetStart="@id/start"
         motion:duration="1000">
-       <KeyFrameSet>
-       </KeyFrameSet>
-        <OnSwipe motion:dragDirection="dragUp"
-            motion:touchRegionId="@+id/registerContainer"
-            motion:touchAnchorSide="top" />
+        <KeyFrameSet></KeyFrameSet>
+        <OnSwipe
+            motion:dragDirection="dragUp"
+            motion:touchAnchorSide="top"
+            motion:touchRegionId="@+id/registerContainer" />
     </Transition>
 
     <ConstraintSet android:id="@+id/start">
@@ -19,213 +19,218 @@
             android:id="@+id/loginTextLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            motion:layout_constraintBottom_toTopOf="@+id/passwordTextLayout"
-            android:layout_marginEnd="@dimen/login_register_margin"
             android:layout_marginStart="@dimen/login_register_margin"
             android:layout_marginTop="16dp"
-            motion:layout_constraintVertical_chainStyle="packed"
-            motion:layout_constraintTop_toBottomOf="@id/logoImg" />
+            android:layout_marginEnd="@dimen/login_register_margin"
+            motion:layout_constraintBottom_toTopOf="@+id/passwordTextLayout"
+            motion:layout_constraintTop_toBottomOf="@id/logoImg"
+            motion:layout_constraintVertical_chainStyle="packed" />
         <Constraint
             android:id="@+id/passwordTextLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            motion:layout_constraintBottom_toTopOf="@+id/loginButton"
+            android:layout_marginStart="@dimen/login_register_margin"
             android:layout_marginEnd="@dimen/login_register_margin"
-            motion:layout_constraintTop_toBottomOf="@+id/loginTextLayout"
-            android:layout_marginStart="@dimen/login_register_margin" />
+            motion:layout_constraintBottom_toTopOf="@+id/loginButton"
+            motion:layout_constraintTop_toBottomOf="@+id/loginTextLayout" />
         <Constraint
             android:id="@+id/loginButton"
-            motion:layout_constraintEnd_toEndOf="parent"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="60dp"
-            motion:layout_constraintTop_toBottomOf="@+id/passwordTextLayout"
             android:layout_marginStart="60dp"
-            motion:layout_constraintStart_toStartOf="parent" />
+            android:layout_marginEnd="60dp"
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toBottomOf="@+id/passwordTextLayout" />
         <Constraint
             android:id="@+id/registerContainer"
-            motion:layout_constraintEnd_toEndOf="parent"
             android:layout_width="match_parent"
             android:layout_height="@dimen/loginContainerHeight"
             motion:layout_constraintBottom_toBottomOf="parent"
-            motion:layout_constraintTop_toBottomOf="@id/loginContainer"
-            motion:layout_constraintStart_toStartOf="parent" />
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toBottomOf="@id/loginContainer" />
         <Constraint
             android:id="@+id/swipeUpArrowLeft"
-            motion:layout_constraintEnd_toStartOf="@id/swipeUpTextView"
             android:layout_width="@dimen/loginContainerHeight"
             android:layout_height="@dimen/loginContainerHeight"
             motion:layout_constraintBottom_toBottomOf="@id/registerContainer"
+            motion:layout_constraintEnd_toStartOf="@id/swipeUpTextView"
             motion:layout_constraintStart_toStartOf="parent" />
         <Constraint
             android:id="@+id/swipeUpArrowRight"
-            motion:layout_constraintEnd_toEndOf="parent"
-            motion:layout_constraintStart_toEndOf="@+id/swipeUpTextView"
             android:layout_width="@dimen/loginContainerHeight"
             android:layout_height="@dimen/loginContainerHeight"
             motion:layout_constraintBottom_toBottomOf="@+id/swipeUpTextView"
+            motion:layout_constraintEnd_toEndOf="parent"
             motion:layout_constraintHorizontal_bias="0.5"
+            motion:layout_constraintStart_toEndOf="@+id/swipeUpTextView"
             motion:layout_constraintTop_toTopOf="@+id/swipeUpTextView" />
         <Constraint
             android:id="@+id/swipeUpTextView"
-            motion:layout_constraintEnd_toStartOf="@+id/swipeUpArrowRight"
-            motion:layout_constraintStart_toEndOf="@+id/swipeUpArrowLeft"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             motion:layout_constraintBottom_toBottomOf="@+id/swipeUpArrowLeft"
+            motion:layout_constraintEnd_toStartOf="@+id/swipeUpArrowRight"
             motion:layout_constraintHorizontal_bias="0.5"
-            motion:layout_constraintTop_toTopOf="@+id/swipeUpArrowLeft" >
+            motion:layout_constraintStart_toEndOf="@+id/swipeUpArrowLeft"
+            motion:layout_constraintTop_toTopOf="@+id/swipeUpArrowLeft">
             <CustomAttribute
                 motion:attributeName="text"
                 motion:customStringValue="@string/make_account_text" />
         </Constraint>
         <Constraint
             android:id="@+id/loginContainer"
-            motion:layout_constraintEnd_toEndOf="parent"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             motion:layout_constraintBottom_toTopOf="@id/registerContainer"
-            motion:layout_constraintTop_toTopOf="parent"
-            motion:layout_constraintStart_toStartOf="parent" />
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toTopOf="parent" />
         <Constraint
             android:id="@+id/registerButton"
-            motion:layout_constraintEnd_toEndOf="parent"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/login_register_button_margin"
-            motion:layout_constraintTop_toBottomOf="@+id/repeatPasswordTextLayout"
             android:layout_marginStart="@dimen/login_register_button_margin"
-            motion:layout_constraintStart_toStartOf="parent" />
+            android:layout_marginEnd="@dimen/login_register_button_margin"
+            app:visibilityMode="ignore"
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toBottomOf="@+id/repeatPasswordTextLayout" />
         <Constraint
             android:id="@+id/registerSummonerTextLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/login_register_margin"
             android:layout_marginEnd="@dimen/login_register_margin"
-            motion:layout_constraintTop_toBottomOf="parent"
-            android:layout_marginStart="@dimen/login_register_margin" />
+            motion:layout_constraintTop_toBottomOf="parent" />
         <Constraint
             android:id="@+id/registerUsernameTextLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            motion:layout_constraintBottom_toTopOf="@+id/registerPasswordTextLayout"
+            android:layout_marginStart="@dimen/login_register_margin"
             android:layout_marginEnd="@dimen/login_register_margin"
-            motion:layout_constraintTop_toBottomOf="@+id/registerSummonerTextLayout"
-            android:layout_marginStart="@dimen/login_register_margin" />
+            motion:layout_constraintBottom_toTopOf="@+id/registerPasswordTextLayout"
+            motion:layout_constraintTop_toBottomOf="@+id/registerSummonerTextLayout" />
         <Constraint
             android:id="@+id/registerPasswordTextLayout"
-            motion:layout_constraintEnd_toEndOf="parent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/login_register_margin"
             android:layout_marginStart="@dimen/login_register_margin"
-            motion:layout_constraintStart_toStartOf="parent"
+            android:layout_marginEnd="@dimen/login_register_margin"
             motion:layout_constraintBottom_toTopOf="@+id/repeatPasswordTextLayout"
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintStart_toStartOf="parent"
             motion:layout_constraintTop_toBottomOf="@+id/registerUsernameTextLayout" />
         <Constraint
             android:id="@+id/repeatPasswordTextLayout"
-            motion:layout_constraintEnd_toEndOf="parent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/login_register_margin"
             android:layout_marginStart="@dimen/login_register_margin"
-            motion:layout_constraintStart_toStartOf="parent"
+            android:layout_marginEnd="@dimen/login_register_margin"
             motion:layout_constraintBottom_toTopOf="@+id/registerButton"
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintStart_toStartOf="parent"
             motion:layout_constraintTop_toBottomOf="@+id/registerPasswordTextLayout" />
         <Constraint
             android:id="@+id/loadingBarAuth"
-            motion:layout_constraintEnd_toEndOf="parent"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:visibility="invisible"
             motion:layout_constraintBottom_toBottomOf="@+id/loginButton"
-            motion:layout_constraintTop_toTopOf="@id/loginButton"
-            motion:layout_constraintStart_toStartOf="parent"/>
-        <Constraint
             motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toTopOf="@id/loginButton"
+            app:visibilityMode="ignore"
+            />
+        <Constraint
+            android:id="@+id/logoImg"
             android:layout_width="120dp"
             android:layout_height="120dp"
-            android:layout_marginBottom="16dp"
             android:layout_marginTop="16dp"
-            motion:layout_constraintTop_toTopOf="parent"
+            android:layout_marginBottom="16dp"
+            motion:layout_constraintEnd_toEndOf="parent"
             motion:layout_constraintStart_toStartOf="parent"
-            android:id="@+id/logoImg" />
+            motion:layout_constraintTop_toTopOf="parent" />
     </ConstraintSet>
 
     <ConstraintSet android:id="@+id/end">
+
         <Constraint
             android:id="@+id/loginContainer"
-            motion:layout_constraintEnd_toEndOf="parent"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             motion:layout_constraintBottom_toTopOf="@id/registerContainer"
-            motion:layout_constraintTop_toTopOf="parent"
-            motion:layout_constraintStart_toStartOf="parent" />
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toTopOf="parent" />
         <Constraint
             android:id="@+id/loginTextLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            motion:layout_constraintBottom_toTopOf="@+id/passwordTextLayout"
-            android:layout_marginEnd="@dimen/login_register_margin"
             android:layout_marginStart="@dimen/login_register_margin"
-            motion:layout_constraintVertical_chainStyle="packed"
-            motion:layout_constraintTop_toTopOf="parent"
+            android:layout_marginEnd="@dimen/login_register_margin"
             android:alpha="0"
-            android:visibility="gone" />
+            android:visibility="gone"
+            motion:layout_constraintBottom_toTopOf="@+id/passwordTextLayout"
+            motion:layout_constraintTop_toTopOf="parent"
+            motion:layout_constraintVertical_chainStyle="packed" />
         <Constraint
             android:id="@+id/passwordTextLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            motion:layout_constraintBottom_toTopOf="@+id/loginButton"
-            android:layout_marginEnd="@dimen/login_register_margin"
-            motion:layout_constraintTop_toBottomOf="@+id/loginTextLayout"
             android:layout_marginStart="@dimen/login_register_margin"
+            android:layout_marginEnd="@dimen/login_register_margin"
             android:alpha="0"
-            android:visibility="gone" />
+            android:visibility="gone"
+            motion:layout_constraintBottom_toTopOf="@+id/loginButton"
+            motion:layout_constraintTop_toBottomOf="@+id/loginTextLayout" />
         <Constraint
             android:id="@+id/loginButton"
-            motion:layout_constraintEnd_toEndOf="parent"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="60dp"
-            motion:layout_constraintTop_toBottomOf="@+id/passwordTextLayout"
             android:layout_marginStart="60dp"
-            motion:layout_constraintStart_toStartOf="parent"
+            android:layout_marginEnd="60dp"
             android:alpha="0"
-            android:visibility="gone" />
-        <Constraint
-            android:layout_height="@dimen/loginContainerHeight"
-            motion:layout_constraintStart_toStartOf="parent"
+            android:visibility="gone"
             motion:layout_constraintEnd_toEndOf="parent"
-            android:layout_width="match_parent"
-            motion:layout_constraintTop_toBottomOf="@id/loginContainer"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toBottomOf="@+id/passwordTextLayout" />
+        <Constraint
             android:id="@+id/registerContainer"
-            android:rotationX="180" />
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/loginContainerHeight"
+            android:rotationX="180"
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toBottomOf="@id/loginContainer" />
         <Constraint
             android:id="@+id/swipeUpArrowRight"
-            motion:layout_constraintEnd_toEndOf="parent"
-            motion:layout_constraintStart_toEndOf="@+id/swipeUpTextView"
             android:layout_width="@dimen/loginContainerHeight"
             android:layout_height="@dimen/loginContainerHeight"
+            android:rotationX="180"
             motion:layout_constraintBottom_toBottomOf="@+id/swipeUpTextView"
+            motion:layout_constraintEnd_toEndOf="parent"
             motion:layout_constraintHorizontal_bias="0.5"
-            motion:layout_constraintTop_toTopOf="@+id/swipeUpTextView"
-            android:rotationX="180" />
+            motion:layout_constraintStart_toEndOf="@+id/swipeUpTextView"
+            motion:layout_constraintTop_toTopOf="@+id/swipeUpTextView" />
         <Constraint
             android:id="@+id/swipeUpArrowLeft"
-            motion:layout_constraintEnd_toStartOf="@id/swipeUpTextView"
             android:layout_width="@dimen/loginContainerHeight"
             android:layout_height="@dimen/loginContainerHeight"
+            android:rotationX="180"
             motion:layout_constraintBottom_toBottomOf="@id/registerContainer"
-            motion:layout_constraintStart_toStartOf="parent"
-            android:rotationX="180" />
+            motion:layout_constraintEnd_toStartOf="@id/swipeUpTextView"
+            motion:layout_constraintStart_toStartOf="parent" />
         <Constraint
             android:id="@+id/swipeUpTextView"
-            motion:layout_constraintEnd_toStartOf="@+id/swipeUpArrowRight"
-            motion:layout_constraintStart_toEndOf="@+id/swipeUpArrowLeft"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             motion:layout_constraintBottom_toBottomOf="@+id/swipeUpArrowLeft"
+            motion:layout_constraintEnd_toStartOf="@+id/swipeUpArrowRight"
             motion:layout_constraintHorizontal_bias="0.5"
-            motion:layout_constraintTop_toTopOf="@+id/swipeUpArrowLeft" >
+            motion:layout_constraintStart_toEndOf="@+id/swipeUpArrowLeft"
+            motion:layout_constraintTop_toTopOf="@+id/swipeUpArrowLeft">
             <CustomAttribute
                 motion:attributeName="text"
                 motion:customStringValue="@string/swipe_down_login_text" />
@@ -234,62 +239,86 @@
             android:id="@+id/registerSummonerTextLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            motion:layout_constraintBottom_toTopOf="@+id/registerUsernameTextLayout"
-            android:layout_marginEnd="@dimen/login_register_margin"
             android:layout_marginStart="@dimen/login_register_margin"
-            motion:layout_constraintVertical_chainStyle="packed"
-            motion:layout_constraintTop_toTopOf="parent" />
+            android:layout_marginEnd="@dimen/login_register_margin"
+            motion:layout_constraintBottom_toTopOf="@+id/registerUsernameTextLayout"
+            motion:layout_constraintTop_toTopOf="parent"
+            motion:layout_constraintVertical_chainStyle="packed" />
         <Constraint
             android:id="@+id/registerUsernameTextLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            motion:layout_constraintBottom_toTopOf="@+id/registerPasswordTextLayout"
+            android:layout_marginStart="@dimen/login_register_margin"
             android:layout_marginEnd="@dimen/login_register_margin"
-            motion:layout_constraintTop_toBottomOf="@+id/registerSummonerTextLayout"
-            android:layout_marginStart="@dimen/login_register_margin" />
+            motion:layout_constraintBottom_toTopOf="@+id/registerPasswordTextLayout"
+            motion:layout_constraintTop_toBottomOf="@+id/registerSummonerTextLayout" />
         <Constraint
             android:id="@+id/registerPasswordTextLayout"
-            motion:layout_constraintEnd_toEndOf="parent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/login_register_margin"
             android:layout_marginStart="@dimen/login_register_margin"
-            motion:layout_constraintStart_toStartOf="parent"
+            android:layout_marginEnd="@dimen/login_register_margin"
             motion:layout_constraintBottom_toTopOf="@+id/repeatPasswordTextLayout"
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintStart_toStartOf="parent"
+            app:visibilityMode="ignore"
             motion:layout_constraintTop_toBottomOf="@+id/registerUsernameTextLayout" />
         <Constraint
             android:id="@+id/repeatPasswordTextLayout"
-            motion:layout_constraintEnd_toEndOf="parent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/login_register_margin"
             android:layout_marginStart="@dimen/login_register_margin"
-            motion:layout_constraintStart_toStartOf="parent"
+            android:layout_marginEnd="@dimen/login_register_margin"
             motion:layout_constraintBottom_toTopOf="@+id/registerButton"
-            motion:layout_constraintTop_toBottomOf="@+id/registerPasswordTextLayout" />
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toBottomOf="@+id/registerPasswordTextLayout"
+
+            />
+
+        <Constraint
+            android:id="@+id/registerPasswordTextField"
+            android:text="@={viewModel.registerPasswordState}"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPassword" />
+
+
+        <Constraint
+            android:id="@+id/repeatPasswordTextField"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPassword"
+            android:text="@={viewModel.repeatPasswordState}"
+            />
+
+
         <Constraint
             android:id="@+id/registerButton"
-            motion:layout_constraintEnd_toEndOf="parent"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            motion:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginEnd="@dimen/login_register_button_margin"
-            motion:layout_constraintTop_toBottomOf="@+id/repeatPasswordTextLayout"
             android:layout_marginStart="@dimen/login_register_button_margin"
-            motion:layout_constraintStart_toStartOf="parent" />
-        <Constraint
-            android:id="@+id/loadingBarAuth"
+            android:layout_marginEnd="@dimen/login_register_button_margin"
+            app:visibilityMode="ignore"
+            motion:layout_constraintBottom_toBottomOf="parent"
             motion:layout_constraintEnd_toEndOf="parent"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            motion:layout_constraintBottom_toBottomOf="@+id/registerButton"
-            motion:layout_constraintTop_toTopOf="@id/registerButton"
-            motion:layout_constraintStart_toStartOf="parent"/>
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toBottomOf="@+id/repeatPasswordTextLayout" />
         <Constraint
+                android:id="@+id/loadingBarAuth"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                motion:layout_constraintBottom_toBottomOf="@+id/registerButton"
+                motion:layout_constraintEnd_toEndOf="parent"
+                motion:layout_constraintStart_toStartOf="parent"
+                motion:layout_constraintTop_toTopOf="@id/registerButton"
+                app:visibilityMode="ignore" />
+
+        <Constraint
+            android:id="@+id/logoImg"
+            android:layout_width="120dp"
             android:layout_height="120dp"
             android:layout_marginTop="24dp"
-            motion:layout_constraintBottom_toTopOf="parent"
-            android:layout_width="120dp"
-            android:id="@+id/logoImg" />
+            motion:layout_constraintBottom_toTopOf="parent" />
     </ConstraintSet>
 </MotionScene>

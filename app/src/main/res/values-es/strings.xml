@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Thunder.GG</string>
+    <string name="enter_summoner_name">Ingresa el Nombre del Jugador</string>
+    <string name="summoner_name">Nombre del Jugador</string>
+    <string name="submit">Entregar</string>
+    <string name="lp_text_format">%d LP</string>
+    <string name="drawer_open">Abre el cajón de navegación</string>
+    <string name="kda_text_format">%d/%d/%d</string>
+    <string name="drawer_close">Cierra el cajón de navegación</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="delete_summoner_text">Eliminar jugador</string>
+    <string name="no_summoner_text">No Jugador</string>
+    <string name="delete_all_summoners_text">Elimina todos los jugadores</string>
+    <string name="login_text">Accesar</string>
+    <string name="username_text">Nombre Usuario</string>
+    <string name="password_text">Contraseña</string>
+    <string name="make_account_text">Desliza hacia arriba para crear una cuenta</string>
+    <string name="swipe_down_login_text">¿Ya tienes una cuenta? Desliza hacia abajo accesar su cuenta</string>
+    <string name="register_text">Registrarse</string>
+    <string name="repeat_password_text">Repite la Contraseña</string>
+    <string name="summoner_name_text">Nombre del Jugador</string>
+    <string name="logout_text">Cerrar sesión</string>
+</resources>

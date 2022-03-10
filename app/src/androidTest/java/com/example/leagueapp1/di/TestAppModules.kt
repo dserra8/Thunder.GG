@@ -2,9 +2,7 @@ package com.example.leagueapp1.di
 
 import android.content.Context
 import androidx.room.Room
-import com.example.leagueapp1.data.local.LeagueDatabase
-import com.example.leagueapp1.repository.FakeRepositoryAndroidTest
-import com.example.leagueapp1.repository.LeagueRepository
+import com.example.leagueapp1.core.data.local.LeagueDatabase
 import com.example.leagueapp1.util.AndroidTestDispatchers
 import com.example.leagueapp1.util.DispatcherProvider
 import dagger.Module
@@ -29,19 +27,20 @@ object TestAppModules {
             .build()
 }
 
-@Module
-@TestInstallIn(
-    components = [SingletonComponent::class],
-    replaces = [RepositoryModule::class]
-)
-object TestRepositoryModule {
-    @ExperimentalCoroutinesApi
-    @Singleton
-    @Provides
-    fun provideTestRepository(
-        dispatchers: DispatcherProvider
-    ) = FakeRepositoryAndroidTest(dispatchers) as LeagueRepository
-}
+//@Module
+//@TestInstallIn(
+//    components = [SingletonComponent::class],
+//    replaces = [RepositoryModule::class]
+//)
+//object TestRepositoryModule {
+//    @ExperimentalCoroutinesApi
+//    @Singleton
+//    @Provides
+//    fun provideTestRepository(
+//        dispatchers: DispatcherProvider,
+//        champNamesManager: ChampNamesManager
+//    ) = FakeRepositoryAndroidTest(dispatchers, champNamesManager) as LeagueRepository
+//}
 
 @Module
 @TestInstallIn(

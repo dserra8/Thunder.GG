@@ -2,12 +2,12 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.example.leagueapp1.ui.champDetails.IntroChampFragment">
+    tools:context="com.example.leagueapp1.feature_champions.presentation.champ_profile.IntroChampFragment">
 
     <data>
         <variable
             name="viewModel"
-            type="com.example.leagueapp1.ui.champDetails.IntroChampViewModel" />
+            type="com.example.leagueapp1.feature_champions.presentation.champ_profile.IntroChampViewModel" />
     </data>
 
 

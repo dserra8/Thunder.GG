@@ -10,6 +10,8 @@ data class ChampItem(
     val id: Int,
     val masteryPoints: Int,
     val rankImageResource: Int,
+    val formattedName: String? = null,
+    val isUpdate: Boolean = false
     ): Parcelable
 
 data class HeaderItem(
